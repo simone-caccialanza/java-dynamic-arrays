@@ -1,7 +1,4 @@
-package main.java;
-
-import main.java.dynarrays.ArenaDynArray;
-import main.java.dynarrays.Utils;
+package dynarrays;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;

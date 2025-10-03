@@ -1,4 +1,4 @@
-package main.java.dynarrays;
+package dynarrays;
 
 public class Utils {
 
