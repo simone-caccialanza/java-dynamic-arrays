@@ -141,10 +141,12 @@ public class ArenaDynArray<T> implements List<T> {
         Iterator<T> it = null;
         if (clazz == int.class || clazz == Integer.class) {
             it = new Iterator<>() {
+                private int index = 0;
                 @Override
                 public boolean hasNext() {
                     try {
-                        nativeValues.getAtIndex((ValueLayout.OfInt) layout, 0);
+                        if (index >= size) throw new IndexOutOfBoundsException();
+                        nativeValues.getAtIndex((ValueLayout.OfInt) layout, index);
                         return true;
                     } catch (IndexOutOfBoundsException _) {
                         return false;
@@ -154,7 +156,8 @@ public class ArenaDynArray<T> implements List<T> {
                 @Override
                 public T next() {
                     try {
-                        return clazz.cast(nativeValues.getAtIndex((ValueLayout.OfInt) layout, 0));
+                        if (index >= size) throw new IndexOutOfBoundsException();
+                        return clazz.cast(nativeValues.getAtIndex((ValueLayout.OfInt) layout, index++));
                     } catch (IndexOutOfBoundsException e) {
                         throw new NoSuchElementException(e);
                     }
@@ -454,7 +457,7 @@ public class ArenaDynArray<T> implements List<T> {
     @Override
     public boolean removeAll(Collection<?> c) {
         for (Object o : c) {
-            remove(o);
+            while (remove(o)) {}
         }
         return true;
     }
@@ -469,6 +472,7 @@ public class ArenaDynArray<T> implements List<T> {
                     MemorySegment.copy(nativeValues, (i + 1) * layout.byteSize(), nativeValues, i * layout.byteSize(), (size - i - 1) * layout.byteSize());
                     nativeValues.setAtIndex((ValueLayout.OfInt) layout, size - 1, 0);
                     size--;
+                    i--; //TODO can avoid this saving all indexes of removal and strip the array just once after the loop
                 }
             }
         } else if (clazz == long.class || clazz == Long.class) {
