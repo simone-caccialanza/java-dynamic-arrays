@@ -20,6 +20,10 @@ public class Main {
         System.out.println(ararr);
     }
 
+    private static void print(Object o) {
+        System.out.println(o);
+    }
+
     private static void basicArenaUsage() {
         String s = "My string\n";
         try (Arena arena = Arena.ofConfined()) {
