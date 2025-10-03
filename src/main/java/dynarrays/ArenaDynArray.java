@@ -314,17 +314,119 @@ public class ArenaDynArray<T> implements List<T> {
 
     @Override
     public Object[] toArray() {
-        throw new UnsupportedOperationException("Not yet implemented");
+        if (size == 0) return new Object[0];
+        Object[] result = new Object[size];
+        if (clazz == int.class || clazz == Integer.class) {
+            for (int i = 0; i < size; i++) {
+                result[i] = clazz.cast(nativeValues.getAtIndex((ValueLayout.OfInt) layout, i));
+            }
+        } else if (clazz == long.class || clazz == Long.class) {
+            for (int i = 0; i < size; i++) {
+                result[i] = clazz.cast(nativeValues.getAtIndex((ValueLayout.OfLong) layout, i));
+            }
+        } else if (clazz == float.class || clazz == Float.class) {
+            for (int i = 0; i < size; i++) {
+                result[i] = clazz.cast(nativeValues.getAtIndex((ValueLayout.OfFloat) layout, i));
+            }
+        } else if (clazz == double.class || clazz == Double.class) {
+            for (int i = 0; i < size; i++) {
+                result[i] = clazz.cast(nativeValues.getAtIndex((ValueLayout.OfDouble) layout, i));
+            }
+        } else if (clazz == boolean.class || clazz == Boolean.class) {
+            for (int i = 0; i < size; i++) {
+                result[i] = clazz.cast(nativeValues.getAtIndex((ValueLayout.OfBoolean) layout, i));
+            }
+        } else if (clazz == char.class || clazz == Character.class) {
+            for (int i = 0; i < size; i++) {
+                result[i] = clazz.cast(nativeValues.getAtIndex((ValueLayout.OfChar) layout, i));
+            }
+        } else if (clazz == String.class) {
+            throw new UnsupportedOperationException("String is not yet supported");
+        } else {
+            throw new UnsupportedOperationException("Unsupported type " + clazz);
+        }
+        return result;
     }
 
     @Override
     public <T1> T1[] toArray(T1[] a) {
-        throw new UnsupportedOperationException("Not yet implemented");
+        if (a == null) throw new IllegalArgumentException("Array must not be null");
+        if (!(clazz.isAssignableFrom(a.getClass().getComponentType())))
+            throw new IllegalArgumentException("Array must be of type " + clazz.getName());
+        if (a.length < size) {
+            a = Arrays.copyOf(a, size);
+        }
+        if (clazz == int.class || clazz == Integer.class) {
+            for (int i = 0; i < size; i++) {
+                a[i] = (T1) clazz.cast(nativeValues.getAtIndex((ValueLayout.OfInt) layout, i));
+            }
+        } else if (clazz == long.class || clazz == Long.class) {
+            for (int i = 0; i < size; i++) {
+                a[i] = (T1) clazz.cast(nativeValues.getAtIndex((ValueLayout.OfLong) layout, i));
+            }
+        } else if (clazz == float.class || clazz == Float.class) {
+            for (int i = 0; i < size; i++) {
+                a[i] = (T1) clazz.cast(nativeValues.getAtIndex((ValueLayout.OfFloat) layout, i));
+            }
+        } else if (clazz == double.class || clazz == Double.class) {
+            for (int i = 0; i < size; i++) {
+                a[i] = (T1) clazz.cast(nativeValues.getAtIndex((ValueLayout.OfDouble) layout, i));
+            }
+        } else if (clazz == boolean.class || clazz == Boolean.class) {
+            for (int i = 0; i < size; i++) {
+                a[i] = (T1) clazz.cast(nativeValues.getAtIndex((ValueLayout.OfBoolean) layout, i));
+            }
+        } else if (clazz == char.class || clazz == Character.class) {
+            for (int i = 0; i < size; i++) {
+                a[i] = (T1) clazz.cast(nativeValues.getAtIndex((ValueLayout.OfChar) layout, i));
+            }
+        } else if (clazz == String.class) {
+            throw new UnsupportedOperationException("String is not yet supported");
+        } else {
+            throw new UnsupportedOperationException("Unsupported type " + clazz);
+        }
+        if (a.length > size) {
+            a[size] = null;
+        }
+        return a;
     }
 
     @Override
     public <T1> T1[] toArray(IntFunction<T1[]> generator) {
-        throw new UnsupportedOperationException("Not yet implemented");
+        if (generator == null) throw new NullPointerException();
+        T1[] a = generator.apply(size);
+        if (!(clazz.isAssignableFrom(a.getClass().getComponentType())))
+            throw new IllegalArgumentException("Array must be of type " + clazz.getName());
+        if (clazz == int.class || clazz == Integer.class) {
+            for (int i = 0; i < size; i++) {
+                a[i] = (T1) clazz.cast(nativeValues.getAtIndex((ValueLayout.OfInt) layout, i));
+            }
+        } else if (clazz == long.class || clazz == Long.class) {
+            for (int i = 0; i < size; i++) {
+                a[i] = (T1) clazz.cast(nativeValues.getAtIndex((ValueLayout.OfLong) layout, i));
+            }
+        } else if (clazz == float.class || clazz == Float.class) {
+            for (int i = 0; i < size; i++) {
+                a[i] = (T1) clazz.cast(nativeValues.getAtIndex((ValueLayout.OfFloat) layout, i));
+            }
+        } else if (clazz == double.class || clazz == Double.class) {
+            for (int i = 0; i < size; i++) {
+                a[i] = (T1) clazz.cast(nativeValues.getAtIndex((ValueLayout.OfDouble) layout, i));
+            }
+        } else if (clazz == boolean.class || clazz == Boolean.class) {
+            for (int i = 0; i < size; i++) {
+                a[i] = (T1) clazz.cast(nativeValues.getAtIndex((ValueLayout.OfBoolean) layout, i));
+            }
+        } else if (clazz == char.class || clazz == Character.class) {
+            for (int i = 0; i < size; i++) {
+                a[i] = (T1) clazz.cast(nativeValues.getAtIndex((ValueLayout.OfChar) layout, i));
+            }
+        } else if (clazz == String.class) {
+            throw new UnsupportedOperationException("String is not yet supported");
+        } else {
+            throw new UnsupportedOperationException("Unsupported type " + clazz);
+        }
+        return a;
     }
 
     @Override
@@ -457,7 +559,8 @@ public class ArenaDynArray<T> implements List<T> {
     @Override
     public boolean removeAll(Collection<?> c) {
         for (Object o : c) {
-            while (remove(o)) {}
+            while (remove(o)) {
+            }
         }
         return true;
     }

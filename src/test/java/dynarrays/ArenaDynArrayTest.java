@@ -414,4 +414,63 @@ class ArenaDynArrayTest {
         assertEquals(2, it.next());
         assertFalse(it.hasNext());
     }
+
+    @Test
+    void toArrayReturnsObjectArrayWithValues() {
+        ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
+        array.add(1);
+        array.add(2);
+        array.add(3);
+        Object[] result = array.toArray();
+        assertArrayEquals(new Object[]{1, 2, 3}, result);
+    }
+
+    @Test
+    void toArrayTArrayReturnsFilledArray() {
+        ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
+        array.add(10);
+        array.add(20);
+        Integer[] input = new Integer[2];
+        Integer[] result = array.toArray(input);
+        assertArrayEquals(new Integer[]{10, 20}, result);
+    }
+
+    @Test
+    void toArrayTArrayExpandsAndFillsArray() {
+        ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
+        array.add(5);
+        array.add(6);
+        array.add(7);
+        Integer[] input = new Integer[2];
+        Integer[] result = array.toArray(input);
+        assertArrayEquals(new Integer[]{5, 6, 7}, result);
+    }
+
+    @Test
+    void toArrayTArraySetsNullIfArrayIsLarger() {
+        ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
+        array.add(42);
+        Integer[] input = new Integer[3];
+        Integer[] result = array.toArray(input);
+        assertEquals(42, result[0]);
+        assertNull(result[1]);
+        assertNull(result[2]);
+    }
+
+    @Test
+    void toArrayIntFunctionReturnsFilledArray() {
+        ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
+        array.add(100);
+        array.add(200);
+        Integer[] result = array.toArray(Integer[]::new);
+        assertArrayEquals(new Integer[]{100, 200}, result);
+    }
+
+    @Test
+    void toArrayEmptyArrayReturnsEmpty() {
+        ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
+        assertArrayEquals(new Object[0], array.toArray());
+        assertArrayEquals(new Integer[0], array.toArray(Integer[]::new));
+        assertArrayEquals(new Integer[0], array.toArray(new Integer[0]));
+    }
 }
