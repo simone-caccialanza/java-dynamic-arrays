@@ -1,4 +1,4 @@
-package dynarrays;
+package main.java.dynarrays;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemoryLayout;

@@ -1,5 +1,6 @@
-package dynarrays;
+package test.java;
 
+import main.java.dynarrays.ArenaDynArray;
 import org.junit.jupiter.api.Test;
 
 import java.util.*;
