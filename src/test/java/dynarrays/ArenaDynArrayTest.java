@@ -473,4 +473,27 @@ class ArenaDynArrayTest {
         assertArrayEquals(new Integer[0], array.toArray(Integer[]::new));
         assertArrayEquals(new Integer[0], array.toArray(new Integer[0]));
     }
+
+    @Test
+    void sortSortsIntegersInAscendingOrder() {
+        ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
+        createIntArrayWithValues(array, 5, 2, 9, 1, 3);
+        array.sort(Comparator.naturalOrder());
+        assertArrayEquals(new Integer[]{1, 2, 3, 5, 9}, array.toArray(new Integer[0]));
+    }
+
+    @Test
+    void sortSortsIntegersInDescendingOrder() {
+        ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
+        createIntArrayWithValues(array, 5, 2, 9, 1, 3);
+        array.sort(Comparator.reverseOrder());
+        assertArrayEquals(new Integer[]{9, 5, 3, 2, 1}, array.toArray(new Integer[0]));
+    }
+
+    @Test
+    void sortOnEmptyArrayDoesNothing() {
+        ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
+        array.sort(Comparator.naturalOrder());
+        assertEquals(0, array.size());
+    }
 }

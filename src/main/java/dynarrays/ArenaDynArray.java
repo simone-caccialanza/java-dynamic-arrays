@@ -53,8 +53,9 @@ public class ArenaDynArray<T> implements List<T> {
     }
 
     //TODO
-    // - implement max length
-    // - implement memory type
+    // - implement memory type considering different types of memory privileges (Arena.ofSomething())
+    // - implement a factory
+    // - consider implementing different interfaces in order to avoid saving big chunks on the heap (e.g. toArray())
     public ArenaDynArray(Class<T> clazz, short startCapacity) {
         if (!ALLOWED_LAYOUTS_MAP.containsKey(clazz)) {
             throw new IllegalArgumentException("Only primitive and wrapper types are allowed");
@@ -639,7 +640,24 @@ public class ArenaDynArray<T> implements List<T> {
     @Override
     public void sort(Comparator<? super T> c) {
         if (c == null) throw new NullPointerException();
-
+        if (size == 0) return;
+        if (clazz == int.class || clazz == Integer.class) {
+            IntSort.quickSort(nativeValues, 0, size - 1, (Comparator<? super Integer>) c);
+        } else if (clazz == long.class || clazz == Long.class) {
+            LongSort.quickSort(nativeValues, 0, size - 1, (Comparator<? super Long>) c);
+        } else if (clazz == float.class || clazz == Float.class) {
+            FloatSort.quickSort(nativeValues, 0, size - 1, (Comparator<? super Float>) c);
+        } else if (clazz == double.class || clazz == Double.class) {
+            DoubleSort.quickSort(nativeValues, 0, size - 1, (Comparator<? super Double>) c);
+        } else if (clazz == char.class || clazz == Character.class) {
+            CharSort.quickSort(nativeValues, 0, size - 1, (Comparator<? super Character>) c);
+        } else if (clazz == boolean.class || clazz == Boolean.class){
+            BooleanSort.sort(nativeValues, size);
+        } else if (clazz == String.class) {
+            throw new UnsupportedOperationException("String is not yet supported");
+        } else {
+            throw new UnsupportedOperationException("Unsupported type " + clazz);
+        }
     }
 
     @Override
@@ -922,4 +940,187 @@ public class ArenaDynArray<T> implements List<T> {
             nativeValues = newNativeValues;
         }
     }
+
+
+    // TODO implement for other types
+    private class IntSort {
+        private static final ValueLayout layout = ValueLayout.JAVA_INT;
+
+        private static int partition(MemorySegment arr, int low, int high, Comparator<? super Integer> c) {
+
+            int pivot = arr.getAtIndex((ValueLayout.OfInt) layout, high);
+            int i = low - 1;
+
+            for (int j = low; j <= high - 1; j++) {
+                if (c.compare(arr.getAtIndex((ValueLayout.OfInt) layout, j), pivot) < 0) {
+                    i++;
+                    swap(arr, i, j);
+                }
+            }
+
+            swap(arr, i + 1, high);
+            return i + 1;
+        }
+
+        private static void swap(MemorySegment arr, int i, int j) {
+            int temp = arr.getAtIndex((ValueLayout.OfInt) layout, i);
+            arr.setAtIndex((ValueLayout.OfInt) layout, i, (arr.getAtIndex((ValueLayout.OfInt) layout, j)));
+            arr.setAtIndex((ValueLayout.OfInt) layout, j, temp);
+        }
+
+        public static void quickSort(MemorySegment arr, int low, int high, Comparator<? super Integer> c) {
+            if (low < high) {
+
+                int pi = partition(arr, low, high, c);
+
+                quickSort(arr, low, pi - 1, c);
+                quickSort(arr, pi + 1, high, c);
+            }
+        }
+    }
+
+    private class LongSort {
+        private static final ValueLayout layout = ValueLayout.JAVA_LONG;
+
+        private static int partition(MemorySegment arr, int low, int high, Comparator<? super Long> c) {
+            long pivot = arr.getAtIndex((ValueLayout.OfLong) layout, high);
+            int i = low - 1;
+            for (int j = low; j <= high - 1; j++) {
+                if (c.compare(arr.getAtIndex((ValueLayout.OfLong) layout, j), pivot) < 0) {
+                    i++;
+                    swap(arr, i, j);
+                }
+            }
+            swap(arr, i + 1, high);
+            return i + 1;
+        }
+
+        private static void swap(MemorySegment arr, int i, int j) {
+            long temp = arr.getAtIndex((ValueLayout.OfLong) layout, i);
+            arr.setAtIndex((ValueLayout.OfLong) layout, i, arr.getAtIndex((ValueLayout.OfLong) layout, j));
+            arr.setAtIndex((ValueLayout.OfLong) layout, j, temp);
+        }
+
+        public static void quickSort(MemorySegment arr, int low, int high, Comparator<? super Long> c) {
+            if (low < high) {
+                int pi = partition(arr, low, high, c);
+                quickSort(arr, low, pi - 1, c);
+                quickSort(arr, pi + 1, high, c);
+            }
+        }
+    }
+
+    private class FloatSort {
+        private static final ValueLayout layout = ValueLayout.JAVA_FLOAT;
+
+        private static int partition(MemorySegment arr, int low, int high, Comparator<? super Float> c) {
+            float pivot = arr.getAtIndex((ValueLayout.OfFloat) layout, high);
+            int i = low - 1;
+            for (int j = low; j <= high - 1; j++) {
+                if (c.compare(arr.getAtIndex((ValueLayout.OfFloat) layout, j), pivot) < 0) {
+                    i++;
+                    swap(arr, i, j);
+                }
+            }
+            swap(arr, i + 1, high);
+            return i + 1;
+        }
+
+        private static void swap(MemorySegment arr, int i, int j) {
+            float temp = arr.getAtIndex((ValueLayout.OfFloat) layout, i);
+            arr.setAtIndex((ValueLayout.OfFloat) layout, i, arr.getAtIndex((ValueLayout.OfFloat) layout, j));
+            arr.setAtIndex((ValueLayout.OfFloat) layout, j, temp);
+        }
+
+        public static void quickSort(MemorySegment arr, int low, int high, Comparator<? super Float> c) {
+            if (low < high) {
+                int pi = partition(arr, low, high, c);
+                quickSort(arr, low, pi - 1, c);
+                quickSort(arr, pi + 1, high, c);
+            }
+        }
+    }
+
+    private class DoubleSort {
+        private static final ValueLayout layout = ValueLayout.JAVA_DOUBLE;
+
+        private static int partition(MemorySegment arr, int low, int high, Comparator<? super Double> c) {
+            double pivot = arr.getAtIndex((ValueLayout.OfDouble) layout, high);
+            int i = low - 1;
+            for (int j = low; j <= high - 1; j++) {
+                if (c.compare(arr.getAtIndex((ValueLayout.OfDouble) layout, j), pivot) < 0) {
+                    i++;
+                    swap(arr, i, j);
+                }
+            }
+            swap(arr, i + 1, high);
+            return i + 1;
+        }
+
+        private static void swap(MemorySegment arr, int i, int j) {
+            double temp = arr.getAtIndex((ValueLayout.OfDouble) layout, i);
+            arr.setAtIndex((ValueLayout.OfDouble) layout, i, arr.getAtIndex((ValueLayout.OfDouble) layout, j));
+            arr.setAtIndex((ValueLayout.OfDouble) layout, j, temp);
+        }
+
+        public static void quickSort(MemorySegment arr, int low, int high, Comparator<? super Double> c) {
+            if (low < high) {
+                int pi = partition(arr, low, high, c);
+                quickSort(arr, low, pi - 1, c);
+                quickSort(arr, pi + 1, high, c);
+            }
+        }
+    }
+
+    private class CharSort {
+        private static final ValueLayout layout = ValueLayout.JAVA_CHAR;
+
+        private static int partition(MemorySegment arr, int low, int high, Comparator<? super Character> c) {
+            char pivot = arr.getAtIndex((ValueLayout.OfChar) layout, high);
+            int i = low - 1;
+            for (int j = low; j <= high - 1; j++) {
+                if (c.compare(arr.getAtIndex((ValueLayout.OfChar) layout, j), pivot) < 0) {
+                    i++;
+                    swap(arr, i, j);
+                }
+            }
+            swap(arr, i + 1, high);
+            return i + 1;
+        }
+
+        private static void swap(MemorySegment arr, int i, int j) {
+            char temp = arr.getAtIndex((ValueLayout.OfChar) layout, i);
+            arr.setAtIndex((ValueLayout.OfChar) layout, i, arr.getAtIndex((ValueLayout.OfChar) layout, j));
+            arr.setAtIndex((ValueLayout.OfChar) layout, j, temp);
+        }
+
+        public static void quickSort(MemorySegment arr, int low, int high, Comparator<? super Character> c) {
+            if (low < high) {
+                int pi = partition(arr, low, high, c);
+                quickSort(arr, low, pi - 1, c);
+                quickSort(arr, pi + 1, high, c);
+            }
+        }
+    }
+
+    private class BooleanSort {
+        private static final ValueLayout layout = ValueLayout.JAVA_BOOLEAN;
+
+        public static void sort(MemorySegment arr, int size) {
+            for (int i = 0, j = size - 1; i != j; ) {
+                if (arr.getAtIndex((ValueLayout.OfBoolean) layout, i)) {
+                    if (!arr.getAtIndex((ValueLayout.OfBoolean) layout, j)) {
+                        arr.setAtIndex((ValueLayout.OfBoolean) layout, i, false);
+                        arr.setAtIndex((ValueLayout.OfBoolean) layout, j, true);
+                    }
+                    j--;
+                    continue;
+                }
+                i++;
+            }
+        }
+
+    }
+
+
 }
