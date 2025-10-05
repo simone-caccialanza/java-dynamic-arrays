@@ -496,4 +496,45 @@ class ArenaDynArrayTest {
         array.sort(Comparator.naturalOrder());
         assertEquals(0, array.size());
     }
+
+    @Test
+    void listIteratorIteratesAllElements() {
+        ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
+        array.addAll(List.of(1, 2, 3));
+        ListIterator<Integer> it = array.listIterator();
+        assertTrue(it.hasNext());
+        assertEquals(1, it.next());
+        assertEquals(2, it.next());
+        assertEquals(3, it.next());
+        assertFalse(it.hasNext());
+        assertTrue(it.hasPrevious());
+        assertEquals(3, it.previous());
+    }
+
+    @Test
+    void subListReturnsCorrectElements() {
+        ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
+        array.addAll(List.of(10, 20, 30, 40));
+        List<Integer> sub = array.subList(1, 3);
+        assertEquals(2, sub.size());
+        assertEquals(20, sub.get(0));
+        assertEquals(30, sub.get(1));
+    }
+
+    @Test
+    void spliteratorIteratesAllElements() {
+        ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
+        array.addAll(List.of(5, 6, 7));
+        List<Integer> result = new ArrayList<>();
+        array.spliterator().forEachRemaining(result::add);
+        assertEquals(List.of(5, 6, 7), result);
+    }
+
+    @Test
+    void streamCollectsAllElements() {
+        ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
+        array.addAll(List.of(100, 200, 300));
+        List<Integer> collected = array.stream().toList();
+        assertEquals(List.of(100, 200, 300), collected);
+    }
 }
