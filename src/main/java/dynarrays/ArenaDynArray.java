@@ -14,6 +14,11 @@ public class ArenaDynArray<T> implements List<T> {
     private static final short DEFAULT_START_CAPACITY = 8;
     private static final Map<Class<?>, ValueLayout> ALLOWED_LAYOUTS_MAP = new HashMap<>();
 
+    public enum MemoryManagerType {
+        SHARED,
+        CONFINED,
+        GLOBAL
+    }
     static {
         ALLOWED_LAYOUTS_MAP.put(int.class, ValueLayout.JAVA_INT);
         ALLOWED_LAYOUTS_MAP.put(Integer.class, ValueLayout.JAVA_INT);
@@ -40,7 +45,7 @@ public class ArenaDynArray<T> implements List<T> {
     }
 
     private final Arena arena;
-    private final int capacity;
+    private final long capacity;
     private final Class<T> clazz;
     private final ValueLayout layout;
     private MemorySegment nativeValues;
@@ -49,11 +54,11 @@ public class ArenaDynArray<T> implements List<T> {
     public ArenaDynArray(Class<T> clazz) {
         this(clazz, DEFAULT_START_CAPACITY);
     }
+    public ArenaDynArray(Class<T> clazz, long startCapacity) {
+        this(clazz, startCapacity, MemoryManagerType.SHARED);
+    }
 
-    //TODO
-    // - implement memory type considering different types of memory privileges (Arena.ofSomething())
-    // - implement a factory
-    public ArenaDynArray(Class<T> clazz, short startCapacity) {
+    public ArenaDynArray(Class<T> clazz, long startCapacity, MemoryManagerType memoryManager) {
         if (!ALLOWED_LAYOUTS_MAP.containsKey(clazz)) {
             throw new IllegalArgumentException("Only primitive and wrapper types are allowed");
         }
@@ -65,7 +70,12 @@ public class ArenaDynArray<T> implements List<T> {
         }
         this.capacity = startCapacity;
 
-        arena = Arena.ofConfined();
+        switch (memoryManager) {
+            case GLOBAL -> arena = Arena.global();
+            case CONFINED -> arena = Arena.ofConfined();
+            case SHARED -> arena = Arena.ofShared();
+            default -> throw new IllegalArgumentException("Unsupported memory manager type " + memoryManager);
+        }
         if (arena == null) {
             throw new RuntimeException("Could not allocate Arena");
         }
@@ -1294,7 +1304,7 @@ public class ArenaDynArray<T> implements List<T> {
 
     @Override
     public Stream<T> parallelStream() {
-        throw new UnsupportedOperationException("Not yet implemented");
+        return StreamSupport.stream(spliterator(), true);
     }
 
 

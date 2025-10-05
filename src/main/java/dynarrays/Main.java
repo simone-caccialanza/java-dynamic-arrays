@@ -39,9 +39,7 @@ public class Main {
         }
     }
 
-    private static void print(Object o) {
-        System.out.println(o);
-    }
+
 
     private static void basicArenaUsage() {
         String s = "My string\n";

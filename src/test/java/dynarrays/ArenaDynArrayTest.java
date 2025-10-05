@@ -537,4 +537,34 @@ class ArenaDynArrayTest {
         List<Integer> collected = array.stream().toList();
         assertEquals(List.of(100, 200, 300), collected);
     }
+
+    @Test
+    void testConfinedArenaThreadViolation() {
+        ArenaDynArray<Integer> arr = new ArenaDynArray<>(Integer.class, 8, ArenaDynArray.MemoryManagerType.CONFINED);
+        Thread t = new Thread(() -> {
+            assertThrows(IllegalStateException.class, () -> arr.add(1));
+        });
+        t.start();
+        try { t.join(); } catch (InterruptedException ignored) {}
+    }
+
+    @Test
+    void testSharedArenaThreadAccess() {
+        ArenaDynArray<Integer> arr = new ArenaDynArray<>(Integer.class, 8, ArenaDynArray.MemoryManagerType.SHARED);
+        Thread t = new Thread(() -> {
+            assertDoesNotThrow(() -> arr.add(2));
+        });
+        t.start();
+        try { t.join(); } catch (InterruptedException ignored) {}
+    }
+
+    @Test
+    void testGlobalArenaThreadAccess() {
+        ArenaDynArray<Integer> arr = new ArenaDynArray<>(Integer.class, 8, ArenaDynArray.MemoryManagerType.GLOBAL);
+        Thread t = new Thread(() -> {
+            assertDoesNotThrow(() -> arr.add(3));
+        });
+        t.start();
+        try { t.join(); } catch (InterruptedException ignored) {}
+    }
 }

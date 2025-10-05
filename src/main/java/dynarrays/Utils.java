@@ -13,4 +13,8 @@ public class Utils {
         System.out.println(sb);
     }
 
+    public static void print(Object o) {
+        System.out.println(o);
+    }
+
 }
