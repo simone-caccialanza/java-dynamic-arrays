@@ -446,18 +446,23 @@ public class ArenaDynArray<T> implements List<T> {
             return true;
         } else if (clazz == long.class || clazz == Long.class) {
             nativeValues.setAtIndex((ValueLayout.OfLong) layout, size, (long) t);
+            size++;
             return true;
         } else if (clazz == float.class || clazz == Float.class) {
             nativeValues.setAtIndex((ValueLayout.OfFloat) layout, size, (float) t);
+            size++;
             return true;
         } else if (clazz == double.class || clazz == Double.class) {
             nativeValues.setAtIndex((ValueLayout.OfDouble) layout, size, (double) t);
+            size++;
             return true;
         } else if (clazz == boolean.class || clazz == Boolean.class) {
             nativeValues.setAtIndex((ValueLayout.OfBoolean) layout, size, (boolean) t);
+            size++;
             return true;
         } else if (clazz == char.class || clazz == Character.class) {
             nativeValues.setAtIndex((ValueLayout.OfChar) layout, size, (char) t);
+            size++;
             return true;
         } else if (clazz == String.class) {
             throw new UnsupportedOperationException("String is not yet supported");
