@@ -1,5 +1,7 @@
 package dynarrays;
 
+import jdk.internal.util.ArraysSupport;
+
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemoryLayout;
 import java.lang.foreign.MemorySegment;
@@ -140,7 +142,7 @@ public class ArenaDynArray<T> implements List<T> {
         assertSupportedOperation();
 
         for (int i = 0; i < size; i++) {
-            action.accept(getIntAtIndex(i));
+            action.accept(reader.apply(i));
         }
 
     }
@@ -152,81 +154,63 @@ public class ArenaDynArray<T> implements List<T> {
 
     @Override
     public Object[] toArray() {
+        assertSupportedOperation();
         if (size == 0) return new Object[0];
         Object[] result = new Object[size];
-        if (clazz == int.class || clazz == Integer.class) {
-            for (int i = 0; i < size; i++) {
-                result[i] = getIntAtIndex(i);
-            }
-        } else if (clazz == long.class || clazz == Long.class) {
-            for (int i = 0; i < size; i++) {
-                result[i] = getLongAtIndex(i);
-            }
-        } else if (clazz == float.class || clazz == Float.class) {
-            for (int i = 0; i < size; i++) {
-                result[i] = getFloatAtIndex(i);
-            }
-        } else if (clazz == double.class || clazz == Double.class) {
-            for (int i = 0; i < size; i++) {
-                result[i] = getDoubleAtIndex(i);
-            }
-        } else if (clazz == boolean.class || clazz == Boolean.class) {
-            for (int i = 0; i < size; i++) {
-                result[i] = getBooleanAtIndex(i);
-            }
-        } else if (clazz == char.class || clazz == Character.class) {
-            for (int i = 0; i < size; i++) {
-                result[i] = getCharAtIndex(i);
-            }
-        } else if (clazz == String.class) {
-            throw new UnsupportedOperationException("String is not yet supported");
-        } else {
-            throw new UnsupportedOperationException("Unsupported type " + clazz);
+
+        for (int i = 0; i < size; i++) {
+            result[i]=reader.apply(i);
         }
+
         return result;
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <T1> T1[] toArray(T1[] a) {
         if (a == null) throw new IllegalArgumentException("Array must not be null");
         if (!(clazz.isAssignableFrom(a.getClass().getComponentType())))
             throw new IllegalArgumentException("Array must be of type " + clazz.getName());
-        if (a.length < size) {
-            a = Arrays.copyOf(a, size);
+
+        T1[] r = a.length >= size ? a :
+                (T1[])java.lang.reflect.Array
+                        .newInstance(a.getClass().getComponentType(), size);
+        Iterator<T> it = iterator();
+
+        for (int i = 0; i < r.length; i++) {
+            if (! it.hasNext()) { // fewer elements than expected
+                if (a == r) {
+                    r[i] = null; // null-terminate
+                } else if (a.length < i) {
+                    return Arrays.copyOf(r, i);
+                } else {
+                    System.arraycopy(r, 0, a, 0, i);
+                    if (a.length > i) {
+                        a[i] = null;
+                    }
+                }
+                return a;
+            }
+            r[i] = (T1)it.next();
         }
-        if (clazz == int.class || clazz == Integer.class) {
-            for (int i = 0; i < size; i++) {
-                a[i] = (T1) getIntAtIndex(i);
+        // more elements than expected
+        return it.hasNext() ? finishToArray(r, it) : r;
+    }
+
+    private static <T> T[] finishToArray(T[] r, Iterator<?> it) {
+        int len = r.length;
+        int i = len;
+        while (it.hasNext()) {
+            if (i == len) {
+                len = ArraysSupport.newLength(len,
+                        1,             /* minimum growth */
+                        (len >> 1) + 1 /* preferred growth */);
+                r = Arrays.copyOf(r, len);
             }
-        } else if (clazz == long.class || clazz == Long.class) {
-            for (int i = 0; i < size; i++) {
-                a[i] = (T1) getLongAtIndex(i);
-            }
-        } else if (clazz == float.class || clazz == Float.class) {
-            for (int i = 0; i < size; i++) {
-                a[i] = (T1) getFloatAtIndex(i);
-            }
-        } else if (clazz == double.class || clazz == Double.class) {
-            for (int i = 0; i < size; i++) {
-                a[i] = (T1) getDoubleAtIndex(i);
-            }
-        } else if (clazz == boolean.class || clazz == Boolean.class) {
-            for (int i = 0; i < size; i++) {
-                a[i] = (T1) getBooleanAtIndex(i);
-            }
-        } else if (clazz == char.class || clazz == Character.class) {
-            for (int i = 0; i < size; i++) {
-                a[i] = (T1) getCharAtIndex(i);
-            }
-        } else if (clazz == String.class) {
-            throw new UnsupportedOperationException("String is not yet supported");
-        } else {
-            throw new UnsupportedOperationException("Unsupported type " + clazz);
+            r[i++] = (T)it.next();
         }
-        if (a.length > size) {
-            a[size] = null;
-        }
-        return a;
+        // trim if overallocated
+        return (i == len) ? r : Arrays.copyOf(r, i);
     }
 
     @Override
