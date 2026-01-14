@@ -174,7 +174,7 @@ class ArenaDynArrayTest {
     @Test
     void removeAtIndexThrowsOnInvalidIndex() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
-        assertThrows(IndexOutOfBoundsException.class, array::removeFirst);
+        assertThrows(IndexOutOfBoundsException.class, () -> array.remove(0));
     }
 
     @Test
@@ -220,7 +220,7 @@ class ArenaDynArrayTest {
     @Test
     void removeIfThrowsOnNullPredicate() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
-        assertThrows(NullPointerException.class, () -> array.removeIf(null));
+        assertThrows(IllegalArgumentException.class, () -> array.removeIf(null));
     }
 
     @Test

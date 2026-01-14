@@ -16,6 +16,53 @@ public class ArenaDynArray<T> implements List<T> {
     private static final short DEFAULT_START_CAPACITY = 8;
     private static final Map<Class<?>, ValueLayout> ALLOWED_LAYOUTS_MAP = new HashMap<>();
 
+    private enum TypeConstant {
+        INTEGER_PRIMITIVE (int.class,      ValueLayout.JAVA_INT,    0),
+        INTEGER_WRAPPER   (Integer.class,  ValueLayout.JAVA_INT,    0),
+
+        LONG_PRIMITIVE    (long.class,     ValueLayout.JAVA_LONG,   0L),
+        LONG_WRAPPER      (Long.class,     ValueLayout.JAVA_LONG,   0L),
+
+        FLOAT_PRIMITIVE   (float.class,    ValueLayout.JAVA_FLOAT,  0f),
+        FLOAT_WRAPPER     (Float.class,    ValueLayout.JAVA_FLOAT,  0f),
+
+        DOUBLE_PRIMITIVE  (double.class,   ValueLayout.JAVA_DOUBLE, 0d),
+        DOUBLE_WRAPPER    (Double.class,   ValueLayout.JAVA_DOUBLE, 0d),
+
+        BOOLEAN_PRIMITIVE (boolean.class,  ValueLayout.JAVA_BYTE,   false),
+        BOOLEAN_WRAPPER   (Boolean.class,  ValueLayout.JAVA_BYTE,   false),
+
+        CHAR_PRIMITIVE    (char.class,     ValueLayout.JAVA_CHAR,   '\0'),
+        CHAR_WRAPPER      (Character.class,ValueLayout.JAVA_CHAR,   '\0');
+
+        final Class<?> type;
+        final ValueLayout layout;
+        final Object zero;
+
+        TypeConstant(Class<?> type, ValueLayout layout, Object zero) {
+            this.type = type;
+            this.layout = layout;
+            this.zero = zero;
+        }
+
+        private static final java.util.Map<Class<?>, TypeConstant> BY_TYPE =
+                java.util.Arrays.stream(values())
+                        .collect(java.util.stream.Collectors.toMap(tc -> tc.type, tc -> tc));
+
+        static TypeConstant getBy(Class<?> clazz) {
+            TypeConstant tc = BY_TYPE.get(clazz);
+            if (tc == null) {
+                throw new UnsupportedOperationException("Unsupported type " + clazz);
+            }
+            return tc;
+        }
+
+        @SuppressWarnings("unchecked")
+        <T> T zero() {
+            return (T) zero;
+        }
+    }
+
     static {
         ALLOWED_LAYOUTS_MAP.put(int.class, ValueLayout.JAVA_INT);
         ALLOWED_LAYOUTS_MAP.put(Integer.class, ValueLayout.JAVA_INT);
@@ -46,8 +93,9 @@ public class ArenaDynArray<T> implements List<T> {
     private final Class<T> clazz;
     private final ValueLayout layout;
     private final IntFunction<T> reader;
-    private final Consumer<T> setter;
+    private final BiConsumer<T, Integer> setter;
     private MemorySegment nativeValues;
+    private final TypeConstant typeConstant;
     private int size = 0;
 
     public ArenaDynArray(Class<T> clazz) {
@@ -85,6 +133,8 @@ public class ArenaDynArray<T> implements List<T> {
 
         reader = getValueReader();
         setter = getValueSetter();
+
+        typeConstant = TypeConstant.getBy(clazz);
 
         nativeValues = arena.allocate(memoryLayout.byteSize(), memoryLayout.byteAlignment());
     }
@@ -210,35 +260,9 @@ public class ArenaDynArray<T> implements List<T> {
     @Override
     public boolean add(T t) {
         checkSizeAndRealloc();
-        if (clazz == int.class || clazz == Integer.class) {
-            nativeValues.setAtIndex((ValueLayout.OfInt) layout, size, (int) t);
-            size++;
-            return true;
-        } else if (clazz == long.class || clazz == Long.class) {
-            nativeValues.setAtIndex((ValueLayout.OfLong) layout, size, (long) t);
-            size++;
-            return true;
-        } else if (clazz == float.class || clazz == Float.class) {
-            nativeValues.setAtIndex((ValueLayout.OfFloat) layout, size, (float) t);
-            size++;
-            return true;
-        } else if (clazz == double.class || clazz == Double.class) {
-            nativeValues.setAtIndex((ValueLayout.OfDouble) layout, size, (double) t);
-            size++;
-            return true;
-        } else if (clazz == boolean.class || clazz == Boolean.class) {
-            nativeValues.setAtIndex((ValueLayout.OfBoolean) layout, size, (boolean) t);
-            size++;
-            return true;
-        } else if (clazz == char.class || clazz == Character.class) {
-            nativeValues.setAtIndex((ValueLayout.OfChar) layout, size, (char) t);
-            size++;
-            return true;
-        } else if (clazz == String.class) {
-            throw new UnsupportedOperationException("String is not yet supported");
-        } else {
-            throw new UnsupportedOperationException("Unsupported type " + clazz);
-        }
+        setter.accept(t, size);
+        size++;
+        return true;
     }
 
     @Override
@@ -247,66 +271,18 @@ public class ArenaDynArray<T> implements List<T> {
             throw new IllegalArgumentException("Parameter of contains(Object) is not of type " + this.clazz);
         }
         T t = clazz.cast(o);
-        if (clazz == int.class || clazz == Integer.class) {
-            for (int i = 0; i < size; i++) {
-                if (t.equals(getIntAtIndex(i))) {
-                    MemorySegment.copy(nativeValues, (i + 1) * layout.byteSize(), nativeValues, i * layout.byteSize(), (size - i - 1) * layout.byteSize());
-                    nativeValues.setAtIndex((ValueLayout.OfInt) layout, size - 1, 0);
-                    size--;
-                    return true;
-                }
+        for (int i = 0; i < size; i++) {
+            if (t.equals(reader.apply(i))) {
+                shiftValueToPreviousPositionAtIndex(i);
+                size--;
+                return true;
             }
-        } else if (clazz == long.class || clazz == Long.class) {
-            for (int i = 0; i < size; i++) {
-                if (t.equals(getLongAtIndex(i))) {
-                    MemorySegment.copy(nativeValues, (i + 1) * layout.byteSize(), nativeValues, i * layout.byteSize(), (size - i - 1) * layout.byteSize());
-                    nativeValues.setAtIndex((ValueLayout.OfLong) layout, size - 1, 0L);
-                    size--;
-                    return true;
-                }
-            }
-        } else if (clazz == float.class || clazz == Float.class) {
-            for (int i = 0; i < size; i++) {
-                if (t.equals(getFloatAtIndex(i))) {
-                    MemorySegment.copy(nativeValues, (i + 1) * layout.byteSize(), nativeValues, i * layout.byteSize(), (size - i - 1) * layout.byteSize());
-                    nativeValues.setAtIndex((ValueLayout.OfFloat) layout, size - 1, 0f);
-                    size--;
-                    return true;
-                }
-            }
-        } else if (clazz == double.class || clazz == Double.class) {
-            for (int i = 0; i < size; i++) {
-                if (t.equals(getDoubleAtIndex(i))) {
-                    MemorySegment.copy(nativeValues, (i + 1) * layout.byteSize(), nativeValues, i * layout.byteSize(), (size - i - 1) * layout.byteSize());
-                    nativeValues.setAtIndex((ValueLayout.OfDouble) layout, size - 1, 0d);
-                    size--;
-                    return true;
-                }
-            }
-        } else if (clazz == boolean.class || clazz == Boolean.class) {
-            for (int i = 0; i < size; i++) {
-                if (t.equals(getBooleanAtIndex(i))) {
-                    MemorySegment.copy(nativeValues, (i + 1) * layout.byteSize(), nativeValues, i * layout.byteSize(), (size - i - 1) * layout.byteSize());
-                    nativeValues.setAtIndex((ValueLayout.OfBoolean) layout, size - 1, false);
-                    size--;
-                    return true;
-                }
-            }
-        } else if (clazz == char.class || clazz == Character.class) {
-            for (int i = 0; i < size; i++) {
-                if (t.equals(getCharAtIndex(i))) {
-                    MemorySegment.copy(nativeValues, (i + 1) * layout.byteSize(), nativeValues, i * layout.byteSize(), (size - i - 1) * layout.byteSize());
-                    nativeValues.setAtIndex((ValueLayout.OfChar) layout, size - 1, '\0');
-                    size--;
-                    return true;
-                }
-            }
-        } else if (clazz == String.class) {
-            throw new UnsupportedOperationException("String is not yet supported");
-        } else {
-            throw new UnsupportedOperationException("Unsupported type " + clazz);
         }
         return false;
+    }
+
+    private void shiftValueToPreviousPositionAtIndex(int i) {
+        MemorySegment.copy(nativeValues, (i + 1) * layout.byteSize(), nativeValues, i * layout.byteSize(), (size - i - 1) * layout.byteSize());
     }
 
     @Override
@@ -350,63 +326,29 @@ public class ArenaDynArray<T> implements List<T> {
 
     @Override
     public boolean removeIf(Predicate<? super T> filter) {
-        if (filter == null) throw new NullPointerException();
+        if (filter == null) throw new IllegalArgumentException();
+        boolean removed = false;
         if (size == 0) return false;
-        if (clazz == int.class || clazz == Integer.class) {
-            for (int i = 0; i < size; i++) {
-                if (filter.test(getIntAtIndex(i))) {
-                    MemorySegment.copy(nativeValues, (i + 1) * layout.byteSize(), nativeValues, i * layout.byteSize(), (size - i - 1) * layout.byteSize());
-                    nativeValues.setAtIndex((ValueLayout.OfInt) layout, size - 1, 0);
-                    size--;
-                    i--; //TODO can avoid this saving all indexes of removal and strip the array just once after the loop
-                }
+
+        int i = 0;
+        while (i < size) {
+            final T value = reader.apply(i);
+
+            if (filter.test(value)) {
+                shiftValueToPreviousPositionAtIndex(i);
+
+                final int lastIndex = size - 1;
+                setter.accept(typeConstant.zero(), lastIndex);
+
+                size--;
+                removed = true;
+                // do not increment i:
+                // new element at index i must be checked
+            } else {
+                i++;
             }
-        } else if (clazz == long.class || clazz == Long.class) {
-            for (int i = 0; i < size; i++) {
-                if (filter.test(getLongAtIndex(i))) {
-                    MemorySegment.copy(nativeValues, (i + 1) * layout.byteSize(), nativeValues, i * layout.byteSize(), (size - i - 1) * layout.byteSize());
-                    nativeValues.setAtIndex((ValueLayout.OfLong) layout, size - 1, 0L);
-                    size--;
-                }
-            }
-        } else if (clazz == float.class || clazz == Float.class) {
-            for (int i = 0; i < size; i++) {
-                if (filter.test(getFloatAtIndex(i))) {
-                    MemorySegment.copy(nativeValues, (i + 1) * layout.byteSize(), nativeValues, i * layout.byteSize(), (size - i - 1) * layout.byteSize());
-                    nativeValues.setAtIndex((ValueLayout.OfFloat) layout, size - 1, 0f);
-                    size--;
-                }
-            }
-        } else if (clazz == double.class || clazz == Double.class) {
-            for (int i = 0; i < size; i++) {
-                if (filter.test(getDoubleAtIndex(i))) {
-                    MemorySegment.copy(nativeValues, (i + 1) * layout.byteSize(), nativeValues, i * layout.byteSize(), (size - i - 1) * layout.byteSize());
-                    nativeValues.setAtIndex((ValueLayout.OfDouble) layout, size - 1, 0d);
-                    size--;
-                }
-            }
-        } else if (clazz == boolean.class || clazz == Boolean.class) {
-            for (int i = 0; i < size; i++) {
-                if (filter.test(getBooleanAtIndex(i))) {
-                    MemorySegment.copy(nativeValues, (i + 1) * layout.byteSize(), nativeValues, i * layout.byteSize(), (size - i - 1) * layout.byteSize());
-                    nativeValues.setAtIndex((ValueLayout.OfBoolean) layout, size - 1, false);
-                    size--;
-                }
-            }
-        } else if (clazz == char.class || clazz == Character.class) {
-            for (int i = 0; i < size; i++) {
-                if (filter.test(getCharAtIndex(i))) {
-                    MemorySegment.copy(nativeValues, (i + 1) * layout.byteSize(), nativeValues, i * layout.byteSize(), (size - i - 1) * layout.byteSize());
-                    nativeValues.setAtIndex((ValueLayout.OfChar) layout, size - 1, '\0');
-                    size--;
-                }
-            }
-        } else if (clazz == String.class) {
-            throw new UnsupportedOperationException("String is not yet supported");
-        } else {
-            throw new UnsupportedOperationException("Unsupported type " + clazz);
         }
-        return false;
+        return removed;
     }
 
     @Override
@@ -1149,31 +1091,31 @@ public class ArenaDynArray<T> implements List<T> {
         throw new UnsupportedOperationException("Unsupported type " + clazz);
     }
 
-    private void setIntAtIndex(T n) {
-        nativeValues.setAtIndex((ValueLayout.OfInt) layout, size, (int) n);
+    private void setIntAtIndex(T n, Integer i) {
+        nativeValues.setAtIndex((ValueLayout.OfInt) layout, i, (int) n);
     }
 
-    private void setLongAtIndex(T l) {
-        nativeValues.setAtIndex((ValueLayout.OfLong) layout, size, (long) l);
+    private void setLongAtIndex(T l, Integer i) {
+        nativeValues.setAtIndex((ValueLayout.OfLong) layout, i, (long) l);
     }
 
-    private void setFloatAtIndex(T f) {
-        nativeValues.setAtIndex((ValueLayout.OfFloat) layout, size, (float) f);
+    private void setFloatAtIndex(T f, Integer i) {
+        nativeValues.setAtIndex((ValueLayout.OfFloat) layout, i, (float) f);
     }
 
-    private void setDoubleAtIndex(T d) {
-        nativeValues.setAtIndex((ValueLayout.OfDouble) layout, size, (double) d);
+    private void setDoubleAtIndex(T d, Integer i) {
+        nativeValues.setAtIndex((ValueLayout.OfDouble) layout, i, (double) d);
     }
 
-    private void setBooleanAtIndex(T b) {
-        nativeValues.setAtIndex((ValueLayout.OfBoolean) layout, size, (boolean) b);
+    private void setBooleanAtIndex(T b, Integer i) {
+        nativeValues.setAtIndex((ValueLayout.OfBoolean) layout, i, (boolean) b);
     }
 
-    private void setCharAtIndex(T c) {
-        nativeValues.setAtIndex((ValueLayout.OfChar) layout, size, (char) c);
+    private void setCharAtIndex(T c, Integer i) {
+        nativeValues.setAtIndex((ValueLayout.OfChar) layout, i, (char) c);
     }
 
-    private Consumer<T> getValueSetter() {
+    private BiConsumer<T, Integer> getValueSetter() {
         if (clazz == int.class || clazz == Integer.class) return this::setIntAtIndex;
         if (clazz == long.class || clazz == Long.class) return this::setLongAtIndex;
         if (clazz == float.class || clazz == Float.class) return this::setFloatAtIndex;
