@@ -19,6 +19,7 @@ public class ArenaDynArray<T> implements List<T> {
         CONFINED,
         GLOBAL
     }
+
     static {
         ALLOWED_LAYOUTS_MAP.put(int.class, ValueLayout.JAVA_INT);
         ALLOWED_LAYOUTS_MAP.put(Integer.class, ValueLayout.JAVA_INT);
@@ -54,6 +55,7 @@ public class ArenaDynArray<T> implements List<T> {
     public ArenaDynArray(Class<T> clazz) {
         this(clazz, DEFAULT_START_CAPACITY);
     }
+
     public ArenaDynArray(Class<T> clazz, long startCapacity) {
         this(clazz, startCapacity, MemoryManagerType.SHARED);
     }
@@ -104,37 +106,37 @@ public class ArenaDynArray<T> implements List<T> {
         T t = clazz.cast(o);
         if (clazz == int.class || clazz == Integer.class) {
             for (int i = 0; i < size; i++) {
-                if (t.equals(clazz.cast(nativeValues.getAtIndex((ValueLayout.OfInt) layout, i)))) {
+                if (t.equals(getIntAtIndex(i))) {
                     return true;
                 }
             }
         } else if (clazz == long.class || clazz == Long.class) {
             for (int i = 0; i < size; i++) {
-                if (t.equals(clazz.cast(nativeValues.getAtIndex((ValueLayout.OfLong) layout, i)))) {
+                if (t.equals(getLongAtIndex(i))) {
                     return true;
                 }
             }
         } else if (clazz == float.class || clazz == Float.class) {
             for (int i = 0; i < size; i++) {
-                if (t.equals(clazz.cast(nativeValues.getAtIndex((ValueLayout.OfFloat) layout, i)))) {
+                if (t.equals(getFloatAtIndex(i))) {
                     return true;
                 }
             }
         } else if (clazz == double.class || clazz == Double.class) {
             for (int i = 0; i < size; i++) {
-                if (t.equals(clazz.cast(nativeValues.getAtIndex((ValueLayout.OfDouble) layout, i)))) {
+                if (t.equals(getDoubleAtIndex(i))) {
                     return true;
                 }
             }
         } else if (clazz == boolean.class || clazz == Boolean.class) {
             for (int i = 0; i < size; i++) {
-                if (t.equals(clazz.cast(nativeValues.getAtIndex((ValueLayout.OfBoolean) layout, i)))) {
+                if (t.equals(getBooleanAtIndex(i))) {
                     return true;
                 }
             }
         } else if (clazz == char.class || clazz == Character.class) {
             for (int i = 0; i < size; i++) {
-                if (t.equals(clazz.cast(nativeValues.getAtIndex((ValueLayout.OfChar) layout, i)))) {
+                if (t.equals(getCharAtIndex(i))) {
                     return true;
                 }
             }
@@ -150,6 +152,7 @@ public class ArenaDynArray<T> implements List<T> {
         if (clazz == int.class || clazz == Integer.class) {
             it = new Iterator<>() {
                 private int index = 0;
+
                 @Override
                 public boolean hasNext() {
                     try {
@@ -290,27 +293,27 @@ public class ArenaDynArray<T> implements List<T> {
         if (size == 0) return;
         if (clazz == int.class || clazz == Integer.class) {
             for (int i = 0; i < size; i++) {
-                action.accept(clazz.cast(nativeValues.getAtIndex((ValueLayout.OfInt) layout, i)));
+                action.accept(getIntAtIndex(i));
             }
         } else if (clazz == long.class || clazz == Long.class) {
             for (int i = 0; i < size; i++) {
-                action.accept(clazz.cast(nativeValues.getAtIndex((ValueLayout.OfLong) layout, i)));
+                action.accept(getLongAtIndex(i));
             }
         } else if (clazz == float.class || clazz == Float.class) {
             for (int i = 0; i < size; i++) {
-                action.accept(clazz.cast(nativeValues.getAtIndex((ValueLayout.OfFloat) layout, i)));
+                action.accept(getFloatAtIndex(i));
             }
         } else if (clazz == double.class || clazz == Double.class) {
             for (int i = 0; i < size; i++) {
-                action.accept(clazz.cast(nativeValues.getAtIndex((ValueLayout.OfDouble) layout, i)));
+                action.accept(getDoubleAtIndex(i));
             }
         } else if (clazz == boolean.class || clazz == Boolean.class) {
             for (int i = 0; i < size; i++) {
-                action.accept(clazz.cast(nativeValues.getAtIndex((ValueLayout.OfBoolean) layout, i)));
+                action.accept(getBooleanAtIndex(i));
             }
         } else if (clazz == char.class || clazz == Character.class) {
             for (int i = 0; i < size; i++) {
-                action.accept(clazz.cast(nativeValues.getAtIndex((ValueLayout.OfChar) layout, i)));
+                action.accept(getCharAtIndex(i));
             }
         } else if (clazz == String.class) {
             throw new UnsupportedOperationException("String is not yet supported");
@@ -326,27 +329,27 @@ public class ArenaDynArray<T> implements List<T> {
         Object[] result = new Object[size];
         if (clazz == int.class || clazz == Integer.class) {
             for (int i = 0; i < size; i++) {
-                result[i] = clazz.cast(nativeValues.getAtIndex((ValueLayout.OfInt) layout, i));
+                result[i] = getIntAtIndex(i);
             }
         } else if (clazz == long.class || clazz == Long.class) {
             for (int i = 0; i < size; i++) {
-                result[i] = clazz.cast(nativeValues.getAtIndex((ValueLayout.OfLong) layout, i));
+                result[i] = getLongAtIndex(i);
             }
         } else if (clazz == float.class || clazz == Float.class) {
             for (int i = 0; i < size; i++) {
-                result[i] = clazz.cast(nativeValues.getAtIndex((ValueLayout.OfFloat) layout, i));
+                result[i] = getFloatAtIndex(i);
             }
         } else if (clazz == double.class || clazz == Double.class) {
             for (int i = 0; i < size; i++) {
-                result[i] = clazz.cast(nativeValues.getAtIndex((ValueLayout.OfDouble) layout, i));
+                result[i] = getDoubleAtIndex(i);
             }
         } else if (clazz == boolean.class || clazz == Boolean.class) {
             for (int i = 0; i < size; i++) {
-                result[i] = clazz.cast(nativeValues.getAtIndex((ValueLayout.OfBoolean) layout, i));
+                result[i] = getBooleanAtIndex(i);
             }
         } else if (clazz == char.class || clazz == Character.class) {
             for (int i = 0; i < size; i++) {
-                result[i] = clazz.cast(nativeValues.getAtIndex((ValueLayout.OfChar) layout, i));
+                result[i] = getCharAtIndex(i);
             }
         } else if (clazz == String.class) {
             throw new UnsupportedOperationException("String is not yet supported");
@@ -366,27 +369,27 @@ public class ArenaDynArray<T> implements List<T> {
         }
         if (clazz == int.class || clazz == Integer.class) {
             for (int i = 0; i < size; i++) {
-                a[i] = (T1) clazz.cast(nativeValues.getAtIndex((ValueLayout.OfInt) layout, i));
+                a[i] = (T1) getIntAtIndex(i);
             }
         } else if (clazz == long.class || clazz == Long.class) {
             for (int i = 0; i < size; i++) {
-                a[i] = (T1) clazz.cast(nativeValues.getAtIndex((ValueLayout.OfLong) layout, i));
+                a[i] = (T1) getLongAtIndex(i);
             }
         } else if (clazz == float.class || clazz == Float.class) {
             for (int i = 0; i < size; i++) {
-                a[i] = (T1) clazz.cast(nativeValues.getAtIndex((ValueLayout.OfFloat) layout, i));
+                a[i] = (T1) getFloatAtIndex(i);
             }
         } else if (clazz == double.class || clazz == Double.class) {
             for (int i = 0; i < size; i++) {
-                a[i] = (T1) clazz.cast(nativeValues.getAtIndex((ValueLayout.OfDouble) layout, i));
+                a[i] = (T1) getDoubleAtIndex(i);
             }
         } else if (clazz == boolean.class || clazz == Boolean.class) {
             for (int i = 0; i < size; i++) {
-                a[i] = (T1) clazz.cast(nativeValues.getAtIndex((ValueLayout.OfBoolean) layout, i));
+                a[i] = (T1) getBooleanAtIndex(i);
             }
         } else if (clazz == char.class || clazz == Character.class) {
             for (int i = 0; i < size; i++) {
-                a[i] = (T1) clazz.cast(nativeValues.getAtIndex((ValueLayout.OfChar) layout, i));
+                a[i] = (T1) getCharAtIndex(i);
             }
         } else if (clazz == String.class) {
             throw new UnsupportedOperationException("String is not yet supported");
@@ -407,27 +410,27 @@ public class ArenaDynArray<T> implements List<T> {
             throw new IllegalArgumentException("Array must be of type " + clazz.getName());
         if (clazz == int.class || clazz == Integer.class) {
             for (int i = 0; i < size; i++) {
-                a[i] = (T1) clazz.cast(nativeValues.getAtIndex((ValueLayout.OfInt) layout, i));
+                a[i] = (T1) getIntAtIndex(i);
             }
         } else if (clazz == long.class || clazz == Long.class) {
             for (int i = 0; i < size; i++) {
-                a[i] = (T1) clazz.cast(nativeValues.getAtIndex((ValueLayout.OfLong) layout, i));
+                a[i] = (T1) getLongAtIndex(i);
             }
         } else if (clazz == float.class || clazz == Float.class) {
             for (int i = 0; i < size; i++) {
-                a[i] = (T1) clazz.cast(nativeValues.getAtIndex((ValueLayout.OfFloat) layout, i));
+                a[i] = (T1) getFloatAtIndex(i);
             }
         } else if (clazz == double.class || clazz == Double.class) {
             for (int i = 0; i < size; i++) {
-                a[i] = (T1) clazz.cast(nativeValues.getAtIndex((ValueLayout.OfDouble) layout, i));
+                a[i] = (T1) getDoubleAtIndex(i);
             }
         } else if (clazz == boolean.class || clazz == Boolean.class) {
             for (int i = 0; i < size; i++) {
-                a[i] = (T1) clazz.cast(nativeValues.getAtIndex((ValueLayout.OfBoolean) layout, i));
+                a[i] = (T1) getBooleanAtIndex(i);
             }
         } else if (clazz == char.class || clazz == Character.class) {
             for (int i = 0; i < size; i++) {
-                a[i] = (T1) clazz.cast(nativeValues.getAtIndex((ValueLayout.OfChar) layout, i));
+                a[i] = (T1) getCharAtIndex(i);
             }
         } else if (clazz == String.class) {
             throw new UnsupportedOperationException("String is not yet supported");
@@ -479,7 +482,7 @@ public class ArenaDynArray<T> implements List<T> {
         T t = clazz.cast(o);
         if (clazz == int.class || clazz == Integer.class) {
             for (int i = 0; i < size; i++) {
-                if (t.equals(clazz.cast(nativeValues.getAtIndex((ValueLayout.OfInt) layout, i)))) {
+                if (t.equals(getIntAtIndex(i))) {
                     MemorySegment.copy(nativeValues, (i + 1) * layout.byteSize(), nativeValues, i * layout.byteSize(), (size - i - 1) * layout.byteSize());
                     nativeValues.setAtIndex((ValueLayout.OfInt) layout, size - 1, 0);
                     size--;
@@ -488,7 +491,7 @@ public class ArenaDynArray<T> implements List<T> {
             }
         } else if (clazz == long.class || clazz == Long.class) {
             for (int i = 0; i < size; i++) {
-                if (t.equals(clazz.cast(nativeValues.getAtIndex((ValueLayout.OfLong) layout, i)))) {
+                if (t.equals(getLongAtIndex(i))) {
                     MemorySegment.copy(nativeValues, (i + 1) * layout.byteSize(), nativeValues, i * layout.byteSize(), (size - i - 1) * layout.byteSize());
                     nativeValues.setAtIndex((ValueLayout.OfLong) layout, size - 1, 0L);
                     size--;
@@ -497,7 +500,7 @@ public class ArenaDynArray<T> implements List<T> {
             }
         } else if (clazz == float.class || clazz == Float.class) {
             for (int i = 0; i < size; i++) {
-                if (t.equals(clazz.cast(nativeValues.getAtIndex((ValueLayout.OfFloat) layout, i)))) {
+                if (t.equals(getFloatAtIndex(i))) {
                     MemorySegment.copy(nativeValues, (i + 1) * layout.byteSize(), nativeValues, i * layout.byteSize(), (size - i - 1) * layout.byteSize());
                     nativeValues.setAtIndex((ValueLayout.OfFloat) layout, size - 1, 0f);
                     size--;
@@ -506,7 +509,7 @@ public class ArenaDynArray<T> implements List<T> {
             }
         } else if (clazz == double.class || clazz == Double.class) {
             for (int i = 0; i < size; i++) {
-                if (t.equals(clazz.cast(nativeValues.getAtIndex((ValueLayout.OfDouble) layout, i)))) {
+                if (t.equals(getDoubleAtIndex(i))) {
                     MemorySegment.copy(nativeValues, (i + 1) * layout.byteSize(), nativeValues, i * layout.byteSize(), (size - i - 1) * layout.byteSize());
                     nativeValues.setAtIndex((ValueLayout.OfDouble) layout, size - 1, 0d);
                     size--;
@@ -515,7 +518,7 @@ public class ArenaDynArray<T> implements List<T> {
             }
         } else if (clazz == boolean.class || clazz == Boolean.class) {
             for (int i = 0; i < size; i++) {
-                if (t.equals(clazz.cast(nativeValues.getAtIndex((ValueLayout.OfBoolean) layout, i)))) {
+                if (t.equals(getBooleanAtIndex(i))) {
                     MemorySegment.copy(nativeValues, (i + 1) * layout.byteSize(), nativeValues, i * layout.byteSize(), (size - i - 1) * layout.byteSize());
                     nativeValues.setAtIndex((ValueLayout.OfBoolean) layout, size - 1, false);
                     size--;
@@ -524,7 +527,7 @@ public class ArenaDynArray<T> implements List<T> {
             }
         } else if (clazz == char.class || clazz == Character.class) {
             for (int i = 0; i < size; i++) {
-                if (t.equals(clazz.cast(nativeValues.getAtIndex((ValueLayout.OfChar) layout, i)))) {
+                if (t.equals(getCharAtIndex(i))) {
                     MemorySegment.copy(nativeValues, (i + 1) * layout.byteSize(), nativeValues, i * layout.byteSize(), (size - i - 1) * layout.byteSize());
                     nativeValues.setAtIndex((ValueLayout.OfChar) layout, size - 1, '\0');
                     size--;
@@ -584,7 +587,7 @@ public class ArenaDynArray<T> implements List<T> {
         if (size == 0) return false;
         if (clazz == int.class || clazz == Integer.class) {
             for (int i = 0; i < size; i++) {
-                if (filter.test(clazz.cast(nativeValues.getAtIndex((ValueLayout.OfInt) layout, i)))) {
+                if (filter.test(getIntAtIndex(i))) {
                     MemorySegment.copy(nativeValues, (i + 1) * layout.byteSize(), nativeValues, i * layout.byteSize(), (size - i - 1) * layout.byteSize());
                     nativeValues.setAtIndex((ValueLayout.OfInt) layout, size - 1, 0);
                     size--;
@@ -593,7 +596,7 @@ public class ArenaDynArray<T> implements List<T> {
             }
         } else if (clazz == long.class || clazz == Long.class) {
             for (int i = 0; i < size; i++) {
-                if (filter.test(clazz.cast(nativeValues.getAtIndex((ValueLayout.OfLong) layout, i)))) {
+                if (filter.test(getLongAtIndex(i))) {
                     MemorySegment.copy(nativeValues, (i + 1) * layout.byteSize(), nativeValues, i * layout.byteSize(), (size - i - 1) * layout.byteSize());
                     nativeValues.setAtIndex((ValueLayout.OfLong) layout, size - 1, 0L);
                     size--;
@@ -601,7 +604,7 @@ public class ArenaDynArray<T> implements List<T> {
             }
         } else if (clazz == float.class || clazz == Float.class) {
             for (int i = 0; i < size; i++) {
-                if (filter.test(clazz.cast(nativeValues.getAtIndex((ValueLayout.OfFloat) layout, i)))) {
+                if (filter.test(getFloatAtIndex(i))) {
                     MemorySegment.copy(nativeValues, (i + 1) * layout.byteSize(), nativeValues, i * layout.byteSize(), (size - i - 1) * layout.byteSize());
                     nativeValues.setAtIndex((ValueLayout.OfFloat) layout, size - 1, 0f);
                     size--;
@@ -609,7 +612,7 @@ public class ArenaDynArray<T> implements List<T> {
             }
         } else if (clazz == double.class || clazz == Double.class) {
             for (int i = 0; i < size; i++) {
-                if (filter.test(clazz.cast(nativeValues.getAtIndex((ValueLayout.OfDouble) layout, i)))) {
+                if (filter.test(getDoubleAtIndex(i))) {
                     MemorySegment.copy(nativeValues, (i + 1) * layout.byteSize(), nativeValues, i * layout.byteSize(), (size - i - 1) * layout.byteSize());
                     nativeValues.setAtIndex((ValueLayout.OfDouble) layout, size - 1, 0d);
                     size--;
@@ -617,7 +620,7 @@ public class ArenaDynArray<T> implements List<T> {
             }
         } else if (clazz == boolean.class || clazz == Boolean.class) {
             for (int i = 0; i < size; i++) {
-                if (filter.test(clazz.cast(nativeValues.getAtIndex((ValueLayout.OfBoolean) layout, i)))) {
+                if (filter.test(getBooleanAtIndex(i))) {
                     MemorySegment.copy(nativeValues, (i + 1) * layout.byteSize(), nativeValues, i * layout.byteSize(), (size - i - 1) * layout.byteSize());
                     nativeValues.setAtIndex((ValueLayout.OfBoolean) layout, size - 1, false);
                     size--;
@@ -625,7 +628,7 @@ public class ArenaDynArray<T> implements List<T> {
             }
         } else if (clazz == char.class || clazz == Character.class) {
             for (int i = 0; i < size; i++) {
-                if (filter.test(clazz.cast(nativeValues.getAtIndex((ValueLayout.OfChar) layout, i)))) {
+                if (filter.test(getCharAtIndex(i))) {
                     MemorySegment.copy(nativeValues, (i + 1) * layout.byteSize(), nativeValues, i * layout.byteSize(), (size - i - 1) * layout.byteSize());
                     nativeValues.setAtIndex((ValueLayout.OfChar) layout, size - 1, '\0');
                     size--;
@@ -663,7 +666,7 @@ public class ArenaDynArray<T> implements List<T> {
             DoubleSort.quickSort(nativeValues, 0, size - 1, (Comparator<? super Double>) c);
         } else if (clazz == char.class || clazz == Character.class) {
             CharSort.quickSort(nativeValues, 0, size - 1, (Comparator<? super Character>) c);
-        } else if (clazz == boolean.class || clazz == Boolean.class){
+        } else if (clazz == boolean.class || clazz == Boolean.class) {
             BooleanSort.sort(nativeValues, size);
         } else if (clazz == String.class) {
             throw new UnsupportedOperationException("String is not yet supported");
@@ -787,37 +790,37 @@ public class ArenaDynArray<T> implements List<T> {
         T t = clazz.cast(o);
         if (clazz == int.class || clazz == Integer.class) {
             for (int i = 0; i < size; i++) {
-                if (t.equals(clazz.cast(nativeValues.getAtIndex((ValueLayout.OfInt) layout, i)))) {
+                if (t.equals(getIntAtIndex(i))) {
                     return i;
                 }
             }
         } else if (clazz == long.class || clazz == Long.class) {
             for (int i = 0; i < size; i++) {
-                if (t.equals(clazz.cast(nativeValues.getAtIndex((ValueLayout.OfLong) layout, i)))) {
+                if (t.equals(getLongAtIndex(i))) {
                     return i;
                 }
             }
         } else if (clazz == float.class || clazz == Float.class) {
             for (int i = 0; i < size; i++) {
-                if (t.equals(clazz.cast(nativeValues.getAtIndex((ValueLayout.OfFloat) layout, i)))) {
+                if (t.equals(getFloatAtIndex(i))) {
                     return i;
                 }
             }
         } else if (clazz == double.class || clazz == Double.class) {
             for (int i = 0; i < size; i++) {
-                if (t.equals(clazz.cast(nativeValues.getAtIndex((ValueLayout.OfDouble) layout, i)))) {
+                if (t.equals(getDoubleAtIndex(i))) {
                     return i;
                 }
             }
         } else if (clazz == boolean.class || clazz == Boolean.class) {
             for (int i = 0; i < size; i++) {
-                if (t.equals(clazz.cast(nativeValues.getAtIndex((ValueLayout.OfBoolean) layout, i)))) {
+                if (t.equals(getBooleanAtIndex(i))) {
                     return i;
                 }
             }
         } else if (clazz == char.class || clazz == Character.class) {
             for (int i = 0; i < size; i++) {
-                if (t.equals(clazz.cast(nativeValues.getAtIndex((ValueLayout.OfChar) layout, i)))) {
+                if (t.equals(getCharAtIndex(i))) {
                     return i;
                 }
             }
@@ -837,37 +840,37 @@ public class ArenaDynArray<T> implements List<T> {
         T t = clazz.cast(o);
         if (clazz == int.class || clazz == Integer.class) {
             for (int i = size - 1; i >= 0; i--) {
-                if (t.equals(clazz.cast(nativeValues.getAtIndex((ValueLayout.OfInt) layout, i)))) {
+                if (t.equals(getIntAtIndex(i))) {
                     return i;
                 }
             }
         } else if (clazz == long.class || clazz == Long.class) {
             for (int i = size - 1; i >= 0; i--) {
-                if (t.equals(clazz.cast(nativeValues.getAtIndex((ValueLayout.OfLong) layout, i)))) {
+                if (t.equals(getLongAtIndex(i))) {
                     return i;
                 }
             }
         } else if (clazz == float.class || clazz == Float.class) {
             for (int i = size - 1; i >= 0; i--) {
-                if (t.equals(clazz.cast(nativeValues.getAtIndex((ValueLayout.OfFloat) layout, i)))) {
+                if (t.equals(getFloatAtIndex(i))) {
                     return i;
                 }
             }
         } else if (clazz == double.class || clazz == Double.class) {
             for (int i = size - 1; i >= 0; i--) {
-                if (t.equals(clazz.cast(nativeValues.getAtIndex((ValueLayout.OfDouble) layout, i)))) {
+                if (t.equals(getDoubleAtIndex(i))) {
                     return i;
                 }
             }
         } else if (clazz == boolean.class || clazz == Boolean.class) {
             for (int i = size - 1; i >= 0; i--) {
-                if (t.equals(clazz.cast(nativeValues.getAtIndex((ValueLayout.OfBoolean) layout, i)))) {
+                if (t.equals(getBooleanAtIndex(i))) {
                     return i;
                 }
             }
         } else if (clazz == char.class || clazz == Character.class) {
             for (int i = size - 1; i >= 0; i--) {
-                if (t.equals(clazz.cast(nativeValues.getAtIndex((ValueLayout.OfChar) layout, i)))) {
+                if (t.equals(getCharAtIndex(i))) {
                     return i;
                 }
             }
@@ -1019,27 +1022,27 @@ public class ArenaDynArray<T> implements List<T> {
         ArenaDynArray<T> subList = new ArenaDynArray<>(clazz, (short) (toIndex - fromIndex));
         if (clazz == int.class || clazz == Integer.class) {
             for (int i = fromIndex; i < toIndex; i++) {
-                subList.add(clazz.cast(nativeValues.getAtIndex((ValueLayout.OfInt) layout, i)));
+                subList.add(getIntAtIndex(i));
             }
         } else if (clazz == long.class || clazz == Long.class) {
             for (int i = fromIndex; i < toIndex; i++) {
-                subList.add(clazz.cast(nativeValues.getAtIndex((ValueLayout.OfLong) layout, i)));
+                subList.add(getLongAtIndex(i));
             }
         } else if (clazz == float.class || clazz == Float.class) {
             for (int i = fromIndex; i < toIndex; i++) {
-                subList.add(clazz.cast(nativeValues.getAtIndex((ValueLayout.OfFloat) layout, i)));
+                subList.add(getFloatAtIndex(i));
             }
         } else if (clazz == double.class || clazz == Double.class) {
             for (int i = fromIndex; i < toIndex; i++) {
-                subList.add(clazz.cast(nativeValues.getAtIndex((ValueLayout.OfDouble) layout, i)));
+                subList.add(getDoubleAtIndex(i));
             }
         } else if (clazz == boolean.class || clazz == Boolean.class) {
             for (int i = fromIndex; i < toIndex; i++) {
-                subList.add(clazz.cast(nativeValues.getAtIndex((ValueLayout.OfBoolean) layout, i)));
+                subList.add(getBooleanAtIndex(i));
             }
         } else if (clazz == char.class || clazz == Character.class) {
             for (int i = fromIndex; i < toIndex; i++) {
-                subList.add(clazz.cast(nativeValues.getAtIndex((ValueLayout.OfChar) layout, i)));
+                subList.add(getCharAtIndex(i));
             }
         } else if (clazz == String.class) {
             throw new UnsupportedOperationException("String is not yet supported");
@@ -1056,6 +1059,7 @@ public class ArenaDynArray<T> implements List<T> {
                     Spliterator.ORDERED | Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.IMMUTABLE
             ) {
                 int index = 0;
+
                 @Override
                 public boolean tryAdvance(IntConsumer action) {
                     if (index >= size) return false;
@@ -1074,6 +1078,7 @@ public class ArenaDynArray<T> implements List<T> {
                             Spliterator.ORDERED | Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.IMMUTABLE
                     ) {
                         int local = index;
+
                         @Override
                         public boolean tryAdvance(IntConsumer action) {
                             if (local >= mid) return false;
@@ -1087,7 +1092,9 @@ public class ArenaDynArray<T> implements List<T> {
                 }
 
                 @Override
-                public long estimateSize() { return size - index; }
+                public long estimateSize() {
+                    return size - index;
+                }
             };
             return (Spliterator) ofInt;
         }
@@ -1098,6 +1105,7 @@ public class ArenaDynArray<T> implements List<T> {
                     Spliterator.ORDERED | Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.IMMUTABLE
             ) {
                 int index = 0;
+
                 @Override
                 public boolean tryAdvance(LongConsumer action) {
                     if (index >= size) return false;
@@ -1116,6 +1124,7 @@ public class ArenaDynArray<T> implements List<T> {
                             Spliterator.ORDERED | Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.IMMUTABLE
                     ) {
                         int local = index;
+
                         @Override
                         public boolean tryAdvance(LongConsumer action) {
                             if (local >= mid) return false;
@@ -1129,7 +1138,9 @@ public class ArenaDynArray<T> implements List<T> {
                 }
 
                 @Override
-                public long estimateSize() { return size - index; }
+                public long estimateSize() {
+                    return size - index;
+                }
             };
             return (Spliterator) ofLong;
         }
@@ -1140,6 +1151,7 @@ public class ArenaDynArray<T> implements List<T> {
                     Spliterator.ORDERED | Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.IMMUTABLE
             ) {
                 int index = 0;
+
                 @Override
                 public boolean tryAdvance(DoubleConsumer action) {
                     if (index >= size) return false;
@@ -1158,6 +1170,7 @@ public class ArenaDynArray<T> implements List<T> {
                             Spliterator.ORDERED | Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.IMMUTABLE
                     ) {
                         int local = index;
+
                         @Override
                         public boolean tryAdvance(DoubleConsumer action) {
                             if (local >= mid) return false;
@@ -1171,7 +1184,9 @@ public class ArenaDynArray<T> implements List<T> {
                 }
 
                 @Override
-                public long estimateSize() { return size - index; }
+                public long estimateSize() {
+                    return size - index;
+                }
             };
             return (Spliterator) ofDouble;
         }
@@ -1183,13 +1198,15 @@ public class ArenaDynArray<T> implements List<T> {
                     Spliterator.ORDERED | Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.IMMUTABLE
             ) {
                 int index = 0;
+
                 @Override
                 public boolean tryAdvance(DoubleConsumer action) {
                     if (index >= size) return false;
                     float value = nativeValues.getAtIndex((ValueLayout.OfFloat) layout, index++);
-                    action.accept((double) value);
+                    action.accept(value);
                     return true;
                 }
+
                 @Override
                 public Spliterator.OfDouble trySplit() {
                     int remaining = size - index;
@@ -1200,19 +1217,23 @@ public class ArenaDynArray<T> implements List<T> {
                             Spliterator.ORDERED | Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.IMMUTABLE
                     ) {
                         int local = index;
+
                         @Override
                         public boolean tryAdvance(DoubleConsumer action) {
                             if (local >= mid) return false;
                             float v = nativeValues.getAtIndex((ValueLayout.OfFloat) layout, local++);
-                            action.accept((double) v);
+                            action.accept(v);
                             return true;
                         }
                     };
                     index = mid;
                     return left;
                 }
+
                 @Override
-                public long estimateSize() { return size - index; }
+                public long estimateSize() {
+                    return size - index;
+                }
             };
             return (Spliterator) ofFloatAsDouble;
         }
@@ -1223,6 +1244,7 @@ public class ArenaDynArray<T> implements List<T> {
                     Spliterator.ORDERED | Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.IMMUTABLE
             ) {
                 int index = 0;
+
                 @Override
                 public boolean tryAdvance(Consumer<? super Boolean> action) {
                     if (index >= size) return false;
@@ -1240,6 +1262,7 @@ public class ArenaDynArray<T> implements List<T> {
                     Spliterator.ORDERED | Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.IMMUTABLE
             ) {
                 int index = 0;
+
                 @Override
                 public boolean tryAdvance(Consumer<? super Character> action) {
                     if (index >= size) return false;
@@ -1256,6 +1279,7 @@ public class ArenaDynArray<T> implements List<T> {
                 Spliterator.ORDERED | Spliterator.SIZED | Spliterator.SUBSIZED
         ) {
             private int index = 0;
+
             @Override
             public boolean tryAdvance(Consumer<? super T> action) {
                 if (index >= size) {
@@ -1499,6 +1523,24 @@ public class ArenaDynArray<T> implements List<T> {
         }
 
     }
-
+    
+    private T getIntAtIndex(int i) {
+        return clazz.cast(nativeValues.getAtIndex((ValueLayout.OfInt) layout, i));
+    }
+    private T getLongAtIndex(int i) {
+        return clazz.cast(nativeValues.getAtIndex((ValueLayout.OfLong) layout, i));
+    }
+    private T getFloatAtIndex(int i) {
+        return clazz.cast(nativeValues.getAtIndex((ValueLayout.OfFloat) layout, i));
+    }
+    private T getDoubleAtIndex(int i) {
+        return clazz.cast(nativeValues.getAtIndex((ValueLayout.OfDouble) layout, i));
+    }
+    private T getCharAtIndex(int i) {
+        return clazz.cast(nativeValues.getAtIndex((ValueLayout.OfChar) layout, i));
+    }
+    private T getBooleanAtIndex(int i) {
+        return clazz.cast(nativeValues.getAtIndex((ValueLayout.OfBoolean) layout, i));
+    }
 
 }
