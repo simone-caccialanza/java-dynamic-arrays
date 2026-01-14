@@ -46,8 +46,10 @@ public class ArenaDynArray<T> implements List<T> {
     private final Class<T> clazz;
     private final ValueLayout layout;
     private final IntFunction<T> reader;
+    private final Consumer<T> setter;
     private MemorySegment nativeValues;
     private int size = 0;
+
     public ArenaDynArray(Class<T> clazz) {
         this(clazz, DEFAULT_START_CAPACITY);
     }
@@ -82,6 +84,7 @@ public class ArenaDynArray<T> implements List<T> {
                 MemoryLayout.sequenceLayout(startCapacity, layout);
 
         reader = getValueReader();
+        setter = getValueSetter();
 
         nativeValues = arena.allocate(memoryLayout.byteSize(), memoryLayout.byteAlignment());
     }
@@ -121,20 +124,6 @@ public class ArenaDynArray<T> implements List<T> {
         return new SimpleIterator<>();
     }
 
-    private IntFunction<T> getValueReader() {
-        if (clazz == int.class || clazz == Integer.class) return this::getIntAtIndex;
-        if (clazz == long.class || clazz == Long.class) return this::getLongAtIndex;
-        if (clazz == float.class || clazz == Float.class) return this::getFloatAtIndex;
-        if (clazz == double.class || clazz == Double.class) return this::getDoubleAtIndex;
-        if (clazz == boolean.class || clazz == Boolean.class) return this::getBooleanAtIndex;
-        if (clazz == char.class || clazz == Character.class) return this::getCharAtIndex;
-
-        if (clazz == String.class) {
-            throw new UnsupportedOperationException("String is not yet supported");
-        }
-        throw new UnsupportedOperationException("Unsupported type " + clazz);
-    }
-
     @Override
     public void forEach(Consumer<? super T> action) {
         if (action == null) throw new NullPointerException();
@@ -159,7 +148,7 @@ public class ArenaDynArray<T> implements List<T> {
         Object[] result = new Object[size];
 
         for (int i = 0; i < size; i++) {
-            result[i]=reader.apply(i);
+            result[i] = reader.apply(i);
         }
 
         return result;
@@ -171,14 +160,13 @@ public class ArenaDynArray<T> implements List<T> {
         if (a == null) throw new IllegalArgumentException("Array must not be null");
         if (!(clazz.isAssignableFrom(a.getClass().getComponentType())))
             throw new IllegalArgumentException("Array must be of type " + clazz.getName());
-
         T1[] r = a.length >= size ? a :
-                (T1[])java.lang.reflect.Array
+                (T1[]) java.lang.reflect.Array
                         .newInstance(a.getClass().getComponentType(), size);
         Iterator<T> it = iterator();
 
         for (int i = 0; i < r.length; i++) {
-            if (! it.hasNext()) { // fewer elements than expected
+            if (!it.hasNext()) { // fewer elements than expected
                 if (a == r) {
                     r[i] = null; // null-terminate
                 } else if (a.length < i) {
@@ -191,12 +179,13 @@ public class ArenaDynArray<T> implements List<T> {
                 }
                 return a;
             }
-            r[i] = (T1)it.next();
+            r[i] = (T1) it.next();
         }
         // more elements than expected
         return it.hasNext() ? finishToArray(r, it) : r;
     }
 
+    @SuppressWarnings("unchecked")
     private static <T> T[] finishToArray(T[] r, Iterator<?> it) {
         int len = r.length;
         int i = len;
@@ -207,7 +196,7 @@ public class ArenaDynArray<T> implements List<T> {
                         (len >> 1) + 1 /* preferred growth */);
                 r = Arrays.copyOf(r, len);
             }
-            r[i++] = (T)it.next();
+            r[i++] = (T) it.next();
         }
         // trim if overallocated
         return (i == len) ? r : Arrays.copyOf(r, i);
@@ -215,40 +204,7 @@ public class ArenaDynArray<T> implements List<T> {
 
     @Override
     public <T1> T1[] toArray(IntFunction<T1[]> generator) {
-        if (generator == null) throw new NullPointerException();
-        T1[] a = generator.apply(size);
-        if (!(clazz.isAssignableFrom(a.getClass().getComponentType())))
-            throw new IllegalArgumentException("Array must be of type " + clazz.getName());
-        if (clazz == int.class || clazz == Integer.class) {
-            for (int i = 0; i < size; i++) {
-                a[i] = (T1) getIntAtIndex(i);
-            }
-        } else if (clazz == long.class || clazz == Long.class) {
-            for (int i = 0; i < size; i++) {
-                a[i] = (T1) getLongAtIndex(i);
-            }
-        } else if (clazz == float.class || clazz == Float.class) {
-            for (int i = 0; i < size; i++) {
-                a[i] = (T1) getFloatAtIndex(i);
-            }
-        } else if (clazz == double.class || clazz == Double.class) {
-            for (int i = 0; i < size; i++) {
-                a[i] = (T1) getDoubleAtIndex(i);
-            }
-        } else if (clazz == boolean.class || clazz == Boolean.class) {
-            for (int i = 0; i < size; i++) {
-                a[i] = (T1) getBooleanAtIndex(i);
-            }
-        } else if (clazz == char.class || clazz == Character.class) {
-            for (int i = 0; i < size; i++) {
-                a[i] = (T1) getCharAtIndex(i);
-            }
-        } else if (clazz == String.class) {
-            throw new UnsupportedOperationException("String is not yet supported");
-        } else {
-            throw new UnsupportedOperationException("Unsupported type " + clazz);
-        }
-        return a;
+        return toArray(generator.apply(0));
     }
 
     @Override
@@ -1178,6 +1134,59 @@ public class ArenaDynArray<T> implements List<T> {
     private T getBooleanAtIndex(int i) {
         return clazz.cast(nativeValues.getAtIndex((ValueLayout.OfBoolean) layout, i));
     }
+
+    private IntFunction<T> getValueReader() {
+        if (clazz == int.class || clazz == Integer.class) return this::getIntAtIndex;
+        if (clazz == long.class || clazz == Long.class) return this::getLongAtIndex;
+        if (clazz == float.class || clazz == Float.class) return this::getFloatAtIndex;
+        if (clazz == double.class || clazz == Double.class) return this::getDoubleAtIndex;
+        if (clazz == boolean.class || clazz == Boolean.class) return this::getBooleanAtIndex;
+        if (clazz == char.class || clazz == Character.class) return this::getCharAtIndex;
+
+        if (clazz == String.class) {
+            throw new UnsupportedOperationException("String is not yet supported");
+        }
+        throw new UnsupportedOperationException("Unsupported type " + clazz);
+    }
+
+    private void setIntAtIndex(T n) {
+        nativeValues.setAtIndex((ValueLayout.OfInt) layout, size, (int) n);
+    }
+
+    private void setLongAtIndex(T l) {
+        nativeValues.setAtIndex((ValueLayout.OfLong) layout, size, (long) l);
+    }
+
+    private void setFloatAtIndex(T f) {
+        nativeValues.setAtIndex((ValueLayout.OfFloat) layout, size, (float) f);
+    }
+
+    private void setDoubleAtIndex(T d) {
+        nativeValues.setAtIndex((ValueLayout.OfDouble) layout, size, (double) d);
+    }
+
+    private void setBooleanAtIndex(T b) {
+        nativeValues.setAtIndex((ValueLayout.OfBoolean) layout, size, (boolean) b);
+    }
+
+    private void setCharAtIndex(T c) {
+        nativeValues.setAtIndex((ValueLayout.OfChar) layout, size, (char) c);
+    }
+
+    private Consumer<T> getValueSetter() {
+        if (clazz == int.class || clazz == Integer.class) return this::setIntAtIndex;
+        if (clazz == long.class || clazz == Long.class) return this::setLongAtIndex;
+        if (clazz == float.class || clazz == Float.class) return this::setFloatAtIndex;
+        if (clazz == double.class || clazz == Double.class) return this::setDoubleAtIndex;
+        if (clazz == boolean.class || clazz == Boolean.class) return this::setBooleanAtIndex;
+        if (clazz == char.class || clazz == Character.class) return this::setCharAtIndex;
+
+        if (clazz == String.class) {
+            throw new UnsupportedOperationException("String is not yet supported");
+        }
+        throw new UnsupportedOperationException("Unsupported type " + clazz);
+    }
+
 
     public enum MemoryManagerType {
         SHARED,
