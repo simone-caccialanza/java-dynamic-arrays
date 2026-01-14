@@ -14,12 +14,6 @@ public class ArenaDynArray<T> implements List<T> {
     private static final short DEFAULT_START_CAPACITY = 8;
     private static final Map<Class<?>, ValueLayout> ALLOWED_LAYOUTS_MAP = new HashMap<>();
 
-    public enum MemoryManagerType {
-        SHARED,
-        CONFINED,
-        GLOBAL
-    }
-
     static {
         ALLOWED_LAYOUTS_MAP.put(int.class, ValueLayout.JAVA_INT);
         ALLOWED_LAYOUTS_MAP.put(Integer.class, ValueLayout.JAVA_INT);
@@ -49,9 +43,9 @@ public class ArenaDynArray<T> implements List<T> {
     private final long capacity;
     private final Class<T> clazz;
     private final ValueLayout layout;
+    private final IntFunction<T> reader;
     private MemorySegment nativeValues;
     private int size = 0;
-
     public ArenaDynArray(Class<T> clazz) {
         this(clazz, DEFAULT_START_CAPACITY);
     }
@@ -85,6 +79,8 @@ public class ArenaDynArray<T> implements List<T> {
         MemoryLayout memoryLayout =
                 MemoryLayout.sequenceLayout(startCapacity, layout);
 
+        reader = getValueReader();
+
         nativeValues = arena.allocate(memoryLayout.byteSize(), memoryLayout.byteAlignment());
     }
 
@@ -103,224 +99,55 @@ public class ArenaDynArray<T> implements List<T> {
         if (!(this.clazz.isAssignableFrom(o.getClass()))) {
             throw new IllegalArgumentException("Parameter of contains(Object) is not of type " + this.clazz);
         }
-        T t = clazz.cast(o);
-        if (clazz == int.class || clazz == Integer.class) {
-            for (int i = 0; i < size; i++) {
-                if (t.equals(getIntAtIndex(i))) {
-                    return true;
-                }
-            }
-        } else if (clazz == long.class || clazz == Long.class) {
-            for (int i = 0; i < size; i++) {
-                if (t.equals(getLongAtIndex(i))) {
-                    return true;
-                }
-            }
-        } else if (clazz == float.class || clazz == Float.class) {
-            for (int i = 0; i < size; i++) {
-                if (t.equals(getFloatAtIndex(i))) {
-                    return true;
-                }
-            }
-        } else if (clazz == double.class || clazz == Double.class) {
-            for (int i = 0; i < size; i++) {
-                if (t.equals(getDoubleAtIndex(i))) {
-                    return true;
-                }
-            }
-        } else if (clazz == boolean.class || clazz == Boolean.class) {
-            for (int i = 0; i < size; i++) {
-                if (t.equals(getBooleanAtIndex(i))) {
-                    return true;
-                }
-            }
-        } else if (clazz == char.class || clazz == Character.class) {
-            for (int i = 0; i < size; i++) {
-                if (t.equals(getCharAtIndex(i))) {
-                    return true;
-                }
-            }
-        } else if (clazz == String.class) {
+        if (clazz == String.class) {
             throw new UnsupportedOperationException("String is not yet supported");
+        }
+        T t = clazz.cast(o);
+        for (int i = 0; i < size; i++) {
+            if (t.equals(reader.apply(i))) {
+                return true;
+            }
         }
         return false;
     }
 
     @Override
     public Iterator<T> iterator() {
-        Iterator<T> it = null;
-        if (clazz == int.class || clazz == Integer.class) {
-            it = new Iterator<>() {
-                private int index = 0;
-
-                @Override
-                public boolean hasNext() {
-                    try {
-                        if (index >= size) throw new IndexOutOfBoundsException();
-                        nativeValues.getAtIndex((ValueLayout.OfInt) layout, index);
-                        return true;
-                    } catch (IndexOutOfBoundsException _) {
-                        return false;
-                    }
-                }
-
-                @Override
-                public T next() {
-                    try {
-                        if (index >= size) throw new IndexOutOfBoundsException();
-                        return clazz.cast(nativeValues.getAtIndex((ValueLayout.OfInt) layout, index++));
-                    } catch (IndexOutOfBoundsException e) {
-                        throw new NoSuchElementException(e);
-                    }
-                }
-            };
-        } else if (clazz == long.class || clazz == Long.class) {
-            it = new Iterator<>() {
-                @Override
-                public boolean hasNext() {
-                    try {
-                        nativeValues.getAtIndex((ValueLayout.OfLong) layout, 0);
-                        return true;
-                    } catch (IndexOutOfBoundsException _) {
-                        return false;
-                    }
-                }
-
-                @Override
-                public T next() {
-                    try {
-                        return clazz.cast(nativeValues.getAtIndex((ValueLayout.OfLong) layout, 0));
-                    } catch (IndexOutOfBoundsException e) {
-                        throw new NoSuchElementException(e);
-                    }
-                }
-            };
-        } else if (clazz == float.class || clazz == Float.class) {
-            it = new Iterator<>() {
-                @Override
-                public boolean hasNext() {
-                    try {
-                        nativeValues.getAtIndex((ValueLayout.OfFloat) layout, 0);
-                        return true;
-                    } catch (IndexOutOfBoundsException _) {
-                        return false;
-                    }
-                }
-
-                @Override
-                public T next() {
-                    try {
-                        return clazz.cast(nativeValues.getAtIndex((ValueLayout.OfFloat) layout, 0));
-                    } catch (IndexOutOfBoundsException e) {
-                        throw new NoSuchElementException(e);
-                    }
-                }
-            };
-        } else if (clazz == double.class || clazz == Double.class) {
-            it = new Iterator<>() {
-                @Override
-                public boolean hasNext() {
-                    try {
-                        nativeValues.getAtIndex((ValueLayout.OfDouble) layout, 0);
-                        return true;
-                    } catch (IndexOutOfBoundsException _) {
-                        return false;
-                    }
-                }
-
-                @Override
-                public T next() {
-                    try {
-                        return clazz.cast(nativeValues.getAtIndex((ValueLayout.OfDouble) layout, 0));
-                    } catch (IndexOutOfBoundsException e) {
-                        throw new NoSuchElementException(e);
-                    }
-                }
-            };
-        } else if (clazz == boolean.class || clazz == Boolean.class) {
-            it = new Iterator<>() {
-                @Override
-                public boolean hasNext() {
-                    try {
-                        nativeValues.getAtIndex((ValueLayout.OfBoolean) layout, 0);
-                        return true;
-                    } catch (IndexOutOfBoundsException _) {
-                        return false;
-                    }
-                }
-
-                @Override
-                public T next() {
-                    try {
-                        return clazz.cast(nativeValues.getAtIndex((ValueLayout.OfBoolean) layout, 0));
-                    } catch (IndexOutOfBoundsException e) {
-                        throw new NoSuchElementException(e);
-                    }
-                }
-            };
-        } else if (clazz == char.class || clazz == Character.class) {
-            it = new Iterator<>() {
-                @Override
-                public boolean hasNext() {
-                    try {
-                        nativeValues.getAtIndex((ValueLayout.OfChar) layout, 0);
-                        return true;
-                    } catch (IndexOutOfBoundsException _) {
-                        return false;
-                    }
-                }
-
-                @Override
-                public T next() {
-                    try {
-                        return clazz.cast(nativeValues.getAtIndex((ValueLayout.OfChar) layout, 0));
-                    } catch (IndexOutOfBoundsException e) {
-                        throw new NoSuchElementException(e);
-                    }
-                }
-            };
-        } else if (clazz == String.class) {
+        if (clazz == String.class) {
             throw new UnsupportedOperationException("String is not yet supported");
         }
+        return new SimpleIterator<>();
+    }
 
-        if (it == null) throw new UnsupportedOperationException("Unsupported type " + clazz);
-        return it;
+    private IntFunction<T> getValueReader() {
+        if (clazz == int.class || clazz == Integer.class) return this::getIntAtIndex;
+        if (clazz == long.class || clazz == Long.class) return this::getLongAtIndex;
+        if (clazz == float.class || clazz == Float.class) return this::getFloatAtIndex;
+        if (clazz == double.class || clazz == Double.class) return this::getDoubleAtIndex;
+        if (clazz == boolean.class || clazz == Boolean.class) return this::getBooleanAtIndex;
+        if (clazz == char.class || clazz == Character.class) return this::getCharAtIndex;
+
+        if (clazz == String.class) {
+            throw new UnsupportedOperationException("String is not yet supported");
+        }
+        throw new UnsupportedOperationException("Unsupported type " + clazz);
     }
 
     @Override
     public void forEach(Consumer<? super T> action) {
         if (action == null) throw new NullPointerException();
         if (size == 0) return;
-        if (clazz == int.class || clazz == Integer.class) {
-            for (int i = 0; i < size; i++) {
-                action.accept(getIntAtIndex(i));
-            }
-        } else if (clazz == long.class || clazz == Long.class) {
-            for (int i = 0; i < size; i++) {
-                action.accept(getLongAtIndex(i));
-            }
-        } else if (clazz == float.class || clazz == Float.class) {
-            for (int i = 0; i < size; i++) {
-                action.accept(getFloatAtIndex(i));
-            }
-        } else if (clazz == double.class || clazz == Double.class) {
-            for (int i = 0; i < size; i++) {
-                action.accept(getDoubleAtIndex(i));
-            }
-        } else if (clazz == boolean.class || clazz == Boolean.class) {
-            for (int i = 0; i < size; i++) {
-                action.accept(getBooleanAtIndex(i));
-            }
-        } else if (clazz == char.class || clazz == Character.class) {
-            for (int i = 0; i < size; i++) {
-                action.accept(getCharAtIndex(i));
-            }
-        } else if (clazz == String.class) {
-            throw new UnsupportedOperationException("String is not yet supported");
-        } else {
-            throw new UnsupportedOperationException("Unsupported type " + clazz);
+        assertSupportedOperation();
+
+        for (int i = 0; i < size; i++) {
+            action.accept(getIntAtIndex(i));
         }
 
+    }
+
+    private void assertSupportedOperation() {
+        if (!ALLOWED_LAYOUTS_MAP.containsKey(clazz))
+            throw new UnsupportedOperationException("Unsupported type " + clazz);
     }
 
     @Override
@@ -1336,13 +1163,42 @@ public class ArenaDynArray<T> implements List<T> {
         return StreamSupport.stream(spliterator(), true);
     }
 
-
     private void checkSizeAndRealloc() {
         if (size == capacity) {
             MemorySegment newNativeValues = arena.allocate(layout.byteSize(), layout.byteAlignment());
             MemorySegment.copy(nativeValues, 0, newNativeValues, 0, nativeValues.byteSize());
             nativeValues = newNativeValues;
         }
+    }
+
+    private T getIntAtIndex(int i) {
+        return clazz.cast(nativeValues.getAtIndex((ValueLayout.OfInt) layout, i));
+    }
+
+    private T getLongAtIndex(int i) {
+        return clazz.cast(nativeValues.getAtIndex((ValueLayout.OfLong) layout, i));
+    }
+
+    private T getFloatAtIndex(int i) {
+        return clazz.cast(nativeValues.getAtIndex((ValueLayout.OfFloat) layout, i));
+    }
+
+    private T getDoubleAtIndex(int i) {
+        return clazz.cast(nativeValues.getAtIndex((ValueLayout.OfDouble) layout, i));
+    }
+
+    private T getCharAtIndex(int i) {
+        return clazz.cast(nativeValues.getAtIndex((ValueLayout.OfChar) layout, i));
+    }
+
+    private T getBooleanAtIndex(int i) {
+        return clazz.cast(nativeValues.getAtIndex((ValueLayout.OfBoolean) layout, i));
+    }
+
+    public enum MemoryManagerType {
+        SHARED,
+        CONFINED,
+        GLOBAL
     }
 
     private class IntSort {
@@ -1523,24 +1379,27 @@ public class ArenaDynArray<T> implements List<T> {
         }
 
     }
-    
-    private T getIntAtIndex(int i) {
-        return clazz.cast(nativeValues.getAtIndex((ValueLayout.OfInt) layout, i));
-    }
-    private T getLongAtIndex(int i) {
-        return clazz.cast(nativeValues.getAtIndex((ValueLayout.OfLong) layout, i));
-    }
-    private T getFloatAtIndex(int i) {
-        return clazz.cast(nativeValues.getAtIndex((ValueLayout.OfFloat) layout, i));
-    }
-    private T getDoubleAtIndex(int i) {
-        return clazz.cast(nativeValues.getAtIndex((ValueLayout.OfDouble) layout, i));
-    }
-    private T getCharAtIndex(int i) {
-        return clazz.cast(nativeValues.getAtIndex((ValueLayout.OfChar) layout, i));
-    }
-    private T getBooleanAtIndex(int i) {
-        return clazz.cast(nativeValues.getAtIndex((ValueLayout.OfBoolean) layout, i));
+
+    protected class SimpleIterator<R extends T> implements Iterator<T> { //TODO fixme
+
+        protected int index = 0;
+
+        @Override
+        public final boolean hasNext() {
+            return index < size;
+        }
+
+        @Override
+        public final T next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+            return nextElement(index++);
+        }
+
+        protected T nextElement(int index) {
+            return reader.apply(index);
+        }
     }
 
 }
