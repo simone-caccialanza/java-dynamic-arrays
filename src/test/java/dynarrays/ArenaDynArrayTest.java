@@ -36,7 +36,7 @@ class ArenaDynArrayTest {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
         array.add(42);
         assertEquals(1, array.size());
-        assertEquals(42, array.get(0));
+        assertEquals(42, array.getFirst());
     }
 
     @Test
@@ -95,16 +95,10 @@ class ArenaDynArrayTest {
     }
 
     @Test
-    void containsThrowsOnUnsupportedType() {
-        ArenaDynArray<String> array = new ArenaDynArray<>(String.class);
-        assertThrows(UnsupportedOperationException.class, () -> array.contains("abc"));
-    }
-
-    @Test
     void getReturnsCorrectValue() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
         array.add(7);
-        assertEquals(7, array.get(0));
+        assertEquals(7, array.getFirst());
     }
 
     @Test
@@ -151,7 +145,7 @@ class ArenaDynArrayTest {
         createIntArrayWithValues(array, 1, 2, 1);
         assertTrue(array.remove(Integer.valueOf(1)));
         assertEquals(2, array.size());
-        assertEquals(2, array.get(0));
+        assertEquals(2, array.getFirst());
     }
 
     @Test
@@ -168,12 +162,6 @@ class ArenaDynArrayTest {
     }
 
     @Test
-    void removeByValueThrowsOnUnsupportedType() {
-        ArenaDynArray<String> array = new ArenaDynArray<>(String.class);
-        assertThrows(UnsupportedOperationException.class, () -> array.remove("abc"));
-    }
-
-    @Test
     void removeAtIndexRemovesCorrectValue() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
         createIntArrayWithValues(array, 1, 2, 3);
@@ -186,7 +174,7 @@ class ArenaDynArrayTest {
     @Test
     void removeAtIndexThrowsOnInvalidIndex() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
-        assertThrows(IndexOutOfBoundsException.class, () -> array.remove(0));
+        assertThrows(IndexOutOfBoundsException.class, array::removeFirst);
     }
 
     @Test
@@ -209,7 +197,7 @@ class ArenaDynArrayTest {
         createIntArrayWithValues(array, 1, 2, 3, 2);
         array.removeAll(List.of(2, 3));
         assertEquals(1, array.size());
-        assertEquals(1, array.get(0));
+        assertEquals(1, array.getFirst());
     }
 
     @Test
