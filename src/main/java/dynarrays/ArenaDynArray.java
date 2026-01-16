@@ -402,10 +402,10 @@ public class ArenaDynArray<T> implements List<T> {
     @Override
     public void add(int index, T element) {
         if (index < 0 || index > size) throw new IndexOutOfBoundsException();
+        size++;
         checkSizeAndRealloc();
         shiftRightValuesAtIndex(index);
         set(index, element);
-        size++;
     }
 
     @Override
@@ -898,7 +898,8 @@ public class ArenaDynArray<T> implements List<T> {
 
     private void checkSizeAndRealloc() {
         if (size == capacity) {
-            MemorySegment newNativeValues = arena.allocate(layout.byteSize(), layout.byteAlignment());
+            var newCapacity = capacity == 0 ? 1 : capacity * 2;
+            MemorySegment newNativeValues = arena.allocate(layout.byteSize() * newCapacity, layout.byteAlignment());
             MemorySegment.copy(nativeValues, 0, newNativeValues, 0, nativeValues.byteSize());
             nativeValues = newNativeValues;
         }
