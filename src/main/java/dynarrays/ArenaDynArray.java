@@ -410,10 +410,10 @@ public class ArenaDynArray<T> implements List<T> {
 
     @Override
     public T remove(int index) {
-        if (index < 0 || index >= size) throw new IndexOutOfBoundsException();
-        T oldValue = clazz.cast(nativeValues.getAtIndex((ValueLayout.OfInt) layout, index));
-        MemorySegment.copy(nativeValues, (index + 1) * layout.byteSize(), nativeValues, index * layout.byteSize(), (size - index - 1) * layout.byteSize());
-        nativeValues.setAtIndex((ValueLayout.OfInt) layout, size - 1, 0);
+        if (index < 0 || index >= size) throw new IndexOutOfBoundsException(); // TODO can refactor in checkOutOfBounds()
+        T oldValue = clazz.cast(get(index));
+        shiftLeftValuesAtIndex(index);
+        set(size - 1, typeConstant.zero());
         size--;
         return oldValue;
     }
@@ -429,6 +429,7 @@ public class ArenaDynArray<T> implements List<T> {
         } else {
             T t = clazz.cast(o);
             if (!(this.clazz.isAssignableFrom(o.getClass()))) {
+                // TODO can refactor using a standard message for IllegalArgumentException
                 throw new IllegalArgumentException("Parameter of indexOf(Object) is not of type " + this.clazz);
             }
             for (int i = 0; i < size; i++) {
@@ -601,33 +602,11 @@ public class ArenaDynArray<T> implements List<T> {
             throw new IndexOutOfBoundsException();
         }
         ArenaDynArray<T> subList = new ArenaDynArray<>(clazz, (short) (toIndex - fromIndex));
-        if (clazz == int.class || clazz == Integer.class) {
-            for (int i = fromIndex; i < toIndex; i++) {
-                subList.add(getIntAtIndex(i));
-            }
-        } else if (clazz == long.class || clazz == Long.class) {
-            for (int i = fromIndex; i < toIndex; i++) {
-                subList.add(getLongAtIndex(i));
-            }
-        } else if (clazz == float.class || clazz == Float.class) {
-            for (int i = fromIndex; i < toIndex; i++) {
-                subList.add(getFloatAtIndex(i));
-            }
-        } else if (clazz == double.class || clazz == Double.class) {
-            for (int i = fromIndex; i < toIndex; i++) {
-                subList.add(getDoubleAtIndex(i));
-            }
-        } else if (clazz == boolean.class || clazz == Boolean.class) {
-            for (int i = fromIndex; i < toIndex; i++) {
-                subList.add(getBooleanAtIndex(i));
-            }
-        } else if (clazz == char.class || clazz == Character.class) {
-            for (int i = fromIndex; i < toIndex; i++) {
-                subList.add(getCharAtIndex(i));
-            }
-        } else if (clazz == String.class) {
-            throw new UnsupportedOperationException("String is not yet supported");
+
+        for (int i = fromIndex; i < toIndex; i++) {
+            subList.add(get(i));
         }
+
         return subList;
     }
 
