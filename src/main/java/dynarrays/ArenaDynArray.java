@@ -332,7 +332,7 @@ public class ArenaDynArray<T> implements List<T> {
                 shiftLeftValuesAtIndex(i);
 
                 final int lastIndex = size - 1;
-                setter.accept(typeConstant.zero(), lastIndex);
+                set(lastIndex, typeConstant.zero());
 
                 size--;
                 removed = true;
@@ -404,7 +404,7 @@ public class ArenaDynArray<T> implements List<T> {
         if (index < 0 || index > size) throw new IndexOutOfBoundsException();
         checkSizeAndRealloc();
         shiftRightValuesAtIndex(index);
-        setter.accept(element, index);
+        set(index, element);
         size++;
     }
 
