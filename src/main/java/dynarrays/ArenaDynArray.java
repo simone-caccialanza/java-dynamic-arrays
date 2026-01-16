@@ -420,100 +420,45 @@ public class ArenaDynArray<T> implements List<T> {
 
     @Override
     public int indexOf(Object o) {
-        if (!(this.clazz.isAssignableFrom(o.getClass()))) {
-            throw new IllegalArgumentException("Parameter of indexOf(Object) is not of type " + this.clazz);
-        }
-        T t = clazz.cast(o);
-        if (clazz == int.class || clazz == Integer.class) {
+        if(o == null){
             for (int i = 0; i < size; i++) {
-                if (t.equals(getIntAtIndex(i))) {
+                if (reader.apply(i) == null) {
                     return i;
                 }
             }
-        } else if (clazz == long.class || clazz == Long.class) {
-            for (int i = 0; i < size; i++) {
-                if (t.equals(getLongAtIndex(i))) {
-                    return i;
-                }
-            }
-        } else if (clazz == float.class || clazz == Float.class) {
-            for (int i = 0; i < size; i++) {
-                if (t.equals(getFloatAtIndex(i))) {
-                    return i;
-                }
-            }
-        } else if (clazz == double.class || clazz == Double.class) {
-            for (int i = 0; i < size; i++) {
-                if (t.equals(getDoubleAtIndex(i))) {
-                    return i;
-                }
-            }
-        } else if (clazz == boolean.class || clazz == Boolean.class) {
-            for (int i = 0; i < size; i++) {
-                if (t.equals(getBooleanAtIndex(i))) {
-                    return i;
-                }
-            }
-        } else if (clazz == char.class || clazz == Character.class) {
-            for (int i = 0; i < size; i++) {
-                if (t.equals(getCharAtIndex(i))) {
-                    return i;
-                }
-            }
-        } else if (clazz == String.class) {
-            throw new UnsupportedOperationException("String is not yet supported");
         } else {
-            throw new UnsupportedOperationException("Unsupported type " + clazz);
+            T t = clazz.cast(o);
+            if (!(this.clazz.isAssignableFrom(o.getClass()))) {
+                throw new IllegalArgumentException("Parameter of indexOf(Object) is not of type " + this.clazz);
+            }
+            for (int i = 0; i < size; i++) {
+                if (t.equals(reader.apply(i))) {
+                    return i;
+                }
+            }
         }
         return -1;
     }
 
     @Override
     public int lastIndexOf(Object o) {
-        if (!(this.clazz.isAssignableFrom(o.getClass()))) {
-            throw new IllegalArgumentException("Parameter of lastIndexOf(Object) is not of type " + this.clazz);
-        }
-        T t = clazz.cast(o);
-        if (clazz == int.class || clazz == Integer.class) {
+        if (o == null) {
             for (int i = size - 1; i >= 0; i--) {
-                if (t.equals(getIntAtIndex(i))) {
+                if (reader.apply(i) == null) {
                     return i;
                 }
             }
-        } else if (clazz == long.class || clazz == Long.class) {
-            for (int i = size - 1; i >= 0; i--) {
-                if (t.equals(getLongAtIndex(i))) {
-                    return i;
-                }
-            }
-        } else if (clazz == float.class || clazz == Float.class) {
-            for (int i = size - 1; i >= 0; i--) {
-                if (t.equals(getFloatAtIndex(i))) {
-                    return i;
-                }
-            }
-        } else if (clazz == double.class || clazz == Double.class) {
-            for (int i = size - 1; i >= 0; i--) {
-                if (t.equals(getDoubleAtIndex(i))) {
-                    return i;
-                }
-            }
-        } else if (clazz == boolean.class || clazz == Boolean.class) {
-            for (int i = size - 1; i >= 0; i--) {
-                if (t.equals(getBooleanAtIndex(i))) {
-                    return i;
-                }
-            }
-        } else if (clazz == char.class || clazz == Character.class) {
-            for (int i = size - 1; i >= 0; i--) {
-                if (t.equals(getCharAtIndex(i))) {
-                    return i;
-                }
-            }
-        } else if (clazz == String.class) {
-            throw new UnsupportedOperationException("String is not yet supported");
         } else {
-            throw new UnsupportedOperationException("Unsupported type " + clazz);
+            if (!(this.clazz.isAssignableFrom(o.getClass()))) {
+                throw new IllegalArgumentException("Parameter of lastIndexOf(Object) is not of type " + this.clazz);
+            }
+            T t = clazz.cast(o);
+            for (int i = size - 1; i >= 0; i--) {
+                if (t.equals(reader.apply(i))) {
+                    return i;
+                }
+            }
+
         }
         return -1;
     }

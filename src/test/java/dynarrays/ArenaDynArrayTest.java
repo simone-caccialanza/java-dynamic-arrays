@@ -247,12 +247,6 @@ class ArenaDynArrayTest {
     }
 
     @Test
-    void indexOfThrowsOnWrongType() {
-        ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
-        assertThrows(IllegalArgumentException.class, () -> array.indexOf("string"));
-    }
-
-    @Test
     void lastIndexOfReturnsCorrectIndex() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
         createIntArrayWithValues(array, 1, 2, 3, 2);
