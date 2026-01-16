@@ -9,9 +9,16 @@ import java.lang.foreign.ValueLayout;
 import java.util.*;
 import java.util.function.*;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 public class ArenaDynArray<T> implements List<T> {
+
+    // TODO review all exceptions:
+    // - add messages
+    // - check the right exception type is used
+    // - refactor some usual checks like out of bounds cases
+
+    //TODO implement string
+    //TODO implement void
 
     private static final short DEFAULT_START_CAPACITY = 8;
     private static final Map<Class<?>, ValueLayout> ALLOWED_LAYOUTS_MAP = new HashMap<>();
@@ -410,7 +417,8 @@ public class ArenaDynArray<T> implements List<T> {
 
     @Override
     public T remove(int index) {
-        if (index < 0 || index >= size) throw new IndexOutOfBoundsException(); // TODO can refactor in checkOutOfBounds()
+        if (index < 0 || index >= size)
+            throw new IndexOutOfBoundsException(); // TODO can refactor in checkOutOfBounds()
         T oldValue = clazz.cast(get(index));
         shiftLeftValuesAtIndex(index);
         set(size - 1, typeConstant.zero());
@@ -420,7 +428,7 @@ public class ArenaDynArray<T> implements List<T> {
 
     @Override
     public int indexOf(Object o) {
-        if(o == null){
+        if (o == null) {
             for (int i = 0; i < size; i++) {
                 if (get(i) == null) {
                     return i;
@@ -611,244 +619,8 @@ public class ArenaDynArray<T> implements List<T> {
     }
 
     @Override
-    @SuppressWarnings({"unchecked", "rawtypes"})
     public Spliterator<T> spliterator() {
-        if (clazz == int.class || clazz == Integer.class) {
-            Spliterator.OfInt ofInt = new Spliterators.AbstractIntSpliterator(
-                    size,
-                    Spliterator.ORDERED | Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.IMMUTABLE
-            ) {
-                int index = 0;
-
-                @Override
-                public boolean tryAdvance(IntConsumer action) {
-                    if (index >= size) return false;
-                    int value = nativeValues.getAtIndex((ValueLayout.OfInt) layout, index++);
-                    action.accept(value);
-                    return true;
-                }
-
-                @Override
-                public Spliterator.OfInt trySplit() {
-                    int remaining = size - index;
-                    if (remaining < 2) return null;
-                    int mid = index + remaining / 2;
-                    Spliterator.OfInt left = new Spliterators.AbstractIntSpliterator(
-                            mid - index,
-                            Spliterator.ORDERED | Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.IMMUTABLE
-                    ) {
-                        int local = index;
-
-                        @Override
-                        public boolean tryAdvance(IntConsumer action) {
-                            if (local >= mid) return false;
-                            int v = nativeValues.getAtIndex((ValueLayout.OfInt) layout, local++);
-                            action.accept(v);
-                            return true;
-                        }
-                    };
-                    index = mid;
-                    return left;
-                }
-
-                @Override
-                public long estimateSize() {
-                    return size - index;
-                }
-            };
-            return (Spliterator) ofInt;
-        }
-
-        if (clazz == long.class || clazz == Long.class) {
-            Spliterator.OfLong ofLong = new Spliterators.AbstractLongSpliterator(
-                    size,
-                    Spliterator.ORDERED | Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.IMMUTABLE
-            ) {
-                int index = 0;
-
-                @Override
-                public boolean tryAdvance(LongConsumer action) {
-                    if (index >= size) return false;
-                    long value = nativeValues.getAtIndex((ValueLayout.OfLong) layout, index++);
-                    action.accept(value);
-                    return true;
-                }
-
-                @Override
-                public Spliterator.OfLong trySplit() {
-                    int remaining = size - index;
-                    if (remaining < 2) return null;
-                    int mid = index + remaining / 2;
-                    Spliterator.OfLong left = new Spliterators.AbstractLongSpliterator(
-                            mid - index,
-                            Spliterator.ORDERED | Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.IMMUTABLE
-                    ) {
-                        int local = index;
-
-                        @Override
-                        public boolean tryAdvance(LongConsumer action) {
-                            if (local >= mid) return false;
-                            long v = nativeValues.getAtIndex((ValueLayout.OfLong) layout, local++);
-                            action.accept(v);
-                            return true;
-                        }
-                    };
-                    index = mid;
-                    return left;
-                }
-
-                @Override
-                public long estimateSize() {
-                    return size - index;
-                }
-            };
-            return (Spliterator) ofLong;
-        }
-
-        if (clazz == double.class || clazz == Double.class) {
-            Spliterator.OfDouble ofDouble = new Spliterators.AbstractDoubleSpliterator(
-                    size,
-                    Spliterator.ORDERED | Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.IMMUTABLE
-            ) {
-                int index = 0;
-
-                @Override
-                public boolean tryAdvance(DoubleConsumer action) {
-                    if (index >= size) return false;
-                    double value = nativeValues.getAtIndex((ValueLayout.OfDouble) layout, index++);
-                    action.accept(value);
-                    return true;
-                }
-
-                @Override
-                public Spliterator.OfDouble trySplit() {
-                    int remaining = size - index;
-                    if (remaining < 2) return null;
-                    int mid = index + remaining / 2;
-                    Spliterator.OfDouble left = new Spliterators.AbstractDoubleSpliterator(
-                            mid - index,
-                            Spliterator.ORDERED | Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.IMMUTABLE
-                    ) {
-                        int local = index;
-
-                        @Override
-                        public boolean tryAdvance(DoubleConsumer action) {
-                            if (local >= mid) return false;
-                            double v = nativeValues.getAtIndex((ValueLayout.OfDouble) layout, local++);
-                            action.accept(v);
-                            return true;
-                        }
-                    };
-                    index = mid;
-                    return left;
-                }
-
-                @Override
-                public long estimateSize() {
-                    return size - index;
-                }
-            };
-            return (Spliterator) ofDouble;
-        }
-
-        if (clazz == float.class || clazz == Float.class) {
-            // use OfDouble by converting float->double inside stream OR implement a dedicated OfDouble/OfObject approach
-            Spliterator.OfDouble ofFloatAsDouble = new Spliterators.AbstractDoubleSpliterator(
-                    size,
-                    Spliterator.ORDERED | Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.IMMUTABLE
-            ) {
-                int index = 0;
-
-                @Override
-                public boolean tryAdvance(DoubleConsumer action) {
-                    if (index >= size) return false;
-                    float value = nativeValues.getAtIndex((ValueLayout.OfFloat) layout, index++);
-                    action.accept(value);
-                    return true;
-                }
-
-                @Override
-                public Spliterator.OfDouble trySplit() {
-                    int remaining = size - index;
-                    if (remaining < 2) return null;
-                    int mid = index + remaining / 2;
-                    Spliterator.OfDouble left = new Spliterators.AbstractDoubleSpliterator(
-                            mid - index,
-                            Spliterator.ORDERED | Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.IMMUTABLE
-                    ) {
-                        int local = index;
-
-                        @Override
-                        public boolean tryAdvance(DoubleConsumer action) {
-                            if (local >= mid) return false;
-                            float v = nativeValues.getAtIndex((ValueLayout.OfFloat) layout, local++);
-                            action.accept(v);
-                            return true;
-                        }
-                    };
-                    index = mid;
-                    return left;
-                }
-
-                @Override
-                public long estimateSize() {
-                    return size - index;
-                }
-            };
-            return (Spliterator) ofFloatAsDouble;
-        }
-
-        if (clazz == boolean.class || clazz == Boolean.class) {
-            Spliterator<Boolean> booleans = new Spliterators.AbstractSpliterator<Boolean>(
-                    size,
-                    Spliterator.ORDERED | Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.IMMUTABLE
-            ) {
-                int index = 0;
-
-                @Override
-                public boolean tryAdvance(Consumer<? super Boolean> action) {
-                    if (index >= size) return false;
-                    boolean value = nativeValues.getAtIndex((ValueLayout.OfBoolean) layout, index++);
-                    action.accept(Boolean.valueOf(value));
-                    return true;
-                }
-            };
-            return (Spliterator) booleans;
-        }
-
-        if (clazz == char.class || clazz == Character.class) {
-            Spliterator<Character> chars = new Spliterators.AbstractSpliterator<Character>(
-                    size,
-                    Spliterator.ORDERED | Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.IMMUTABLE
-            ) {
-                int index = 0;
-
-                @Override
-                public boolean tryAdvance(Consumer<? super Character> action) {
-                    if (index >= size) return false;
-                    char value = nativeValues.getAtIndex((ValueLayout.OfChar) layout, index++);
-                    action.accept(Character.valueOf(value)); // boxing unavoidable for generics
-                    return true;
-                }
-            };
-            return (Spliterator) chars;
-        }
-
-        return new Spliterators.AbstractSpliterator<T>(
-                size,
-                Spliterator.ORDERED | Spliterator.SIZED | Spliterator.SUBSIZED
-        ) {
-            private int index = 0;
-
-            @Override
-            public boolean tryAdvance(Consumer<? super T> action) {
-                if (index >= size) {
-                    return false;
-                }
-                action.accept(ArenaDynArray.this.get(index++));
-                return true;
-            }
-        };
+        return List.super.spliterator();
     }
 
     @Override
@@ -888,12 +660,12 @@ public class ArenaDynArray<T> implements List<T> {
 
     @Override
     public Stream<T> stream() {
-        return StreamSupport.stream(spliterator(), false);
+        return List.super.stream();
     }
 
     @Override
     public Stream<T> parallelStream() {
-        return StreamSupport.stream(spliterator(), true);
+        return List.super.parallelStream();
     }
 
     private void checkSizeAndRealloc() {
