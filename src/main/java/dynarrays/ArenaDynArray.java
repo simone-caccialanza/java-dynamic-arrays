@@ -159,7 +159,7 @@ public class ArenaDynArray<T> implements List<T> {
         }
         T t = clazz.cast(o);
         for (int i = 0; i < size; i++) {
-            if (t.equals(reader.apply(i))) {
+            if (t.equals(get(i))) {
                 return true;
             }
         }
@@ -181,7 +181,7 @@ public class ArenaDynArray<T> implements List<T> {
         assertSupportedOperation();
 
         for (int i = 0; i < size; i++) {
-            action.accept(reader.apply(i));
+            action.accept(get(i));
         }
 
     }
@@ -198,7 +198,7 @@ public class ArenaDynArray<T> implements List<T> {
         Object[] result = new Object[size];
 
         for (int i = 0; i < size; i++) {
-            result[i] = reader.apply(i);
+            result[i] = get(i);
         }
 
         return result;
@@ -270,7 +270,7 @@ public class ArenaDynArray<T> implements List<T> {
         }
         T t = clazz.cast(o);
         for (int i = 0; i < size; i++) {
-            if (t.equals(reader.apply(i))) {
+            if (t.equals(get(i))) {
                 shiftLeftValuesAtIndex(i);
                 size--;
                 return true;
@@ -326,7 +326,7 @@ public class ArenaDynArray<T> implements List<T> {
 
         int i = 0;
         while (i < size) {
-            final T value = reader.apply(i);
+            final T value = get(i);
 
             if (filter.test(value)) {
                 shiftLeftValuesAtIndex(i);
@@ -394,7 +394,7 @@ public class ArenaDynArray<T> implements List<T> {
     public T set(int index, T element) {
         if (index < 0 || index >= size) throw new IndexOutOfBoundsException();
         checkSizeAndRealloc();
-        T oldValue = reader.apply(index);
+        T oldValue = get(index);
         setter.accept(element, index);
         return oldValue;
     }
@@ -422,7 +422,7 @@ public class ArenaDynArray<T> implements List<T> {
     public int indexOf(Object o) {
         if(o == null){
             for (int i = 0; i < size; i++) {
-                if (reader.apply(i) == null) {
+                if (get(i) == null) {
                     return i;
                 }
             }
@@ -432,7 +432,7 @@ public class ArenaDynArray<T> implements List<T> {
                 throw new IllegalArgumentException("Parameter of indexOf(Object) is not of type " + this.clazz);
             }
             for (int i = 0; i < size; i++) {
-                if (t.equals(reader.apply(i))) {
+                if (t.equals(get(i))) {
                     return i;
                 }
             }
@@ -444,7 +444,7 @@ public class ArenaDynArray<T> implements List<T> {
     public int lastIndexOf(Object o) {
         if (o == null) {
             for (int i = size - 1; i >= 0; i--) {
-                if (reader.apply(i) == null) {
+                if (get(i) == null) {
                     return i;
                 }
             }
@@ -454,7 +454,7 @@ public class ArenaDynArray<T> implements List<T> {
             }
             T t = clazz.cast(o);
             for (int i = size - 1; i >= 0; i--) {
-                if (t.equals(reader.apply(i))) {
+                if (t.equals(get(i))) {
                     return i;
                 }
             }
@@ -1213,7 +1213,7 @@ public class ArenaDynArray<T> implements List<T> {
         }
 
         protected T nextElement(int index) {
-            return reader.apply(index);
+            return get(index);
         }
     }
 
