@@ -21,7 +21,6 @@ public class ArenaDynArray<T> implements List<T> {
     //TODO implement void
 
     private static final short DEFAULT_START_CAPACITY = 8;
-    private static final Map<Class<?>, ValueLayout> ALLOWED_LAYOUTS_MAP = new HashMap<>();
 
     private enum TypeConstant {
         INTEGER_PRIMITIVE(int.class, ValueLayout.JAVA_INT, 0),
@@ -70,31 +69,6 @@ public class ArenaDynArray<T> implements List<T> {
         }
     }
 
-    static {
-        ALLOWED_LAYOUTS_MAP.put(int.class, ValueLayout.JAVA_INT);
-        ALLOWED_LAYOUTS_MAP.put(Integer.class, ValueLayout.JAVA_INT);
-
-        ALLOWED_LAYOUTS_MAP.put(long.class, ValueLayout.JAVA_LONG);
-        ALLOWED_LAYOUTS_MAP.put(Long.class, ValueLayout.JAVA_LONG);
-
-        ALLOWED_LAYOUTS_MAP.put(float.class, ValueLayout.JAVA_FLOAT);
-        ALLOWED_LAYOUTS_MAP.put(Float.class, ValueLayout.JAVA_FLOAT);
-
-        ALLOWED_LAYOUTS_MAP.put(double.class, ValueLayout.JAVA_DOUBLE);
-        ALLOWED_LAYOUTS_MAP.put(Double.class, ValueLayout.JAVA_DOUBLE);
-
-        ALLOWED_LAYOUTS_MAP.put(boolean.class, ValueLayout.JAVA_BOOLEAN);
-        ALLOWED_LAYOUTS_MAP.put(Boolean.class, ValueLayout.JAVA_BOOLEAN);
-
-        ALLOWED_LAYOUTS_MAP.put(char.class, ValueLayout.JAVA_CHAR);
-        ALLOWED_LAYOUTS_MAP.put(Character.class, ValueLayout.JAVA_CHAR);
-
-//        ALLOWED_LAYOUTS_MAP.put(void.class, MemoryLayout.sequenceLayout(0, ValueLayout.JAVA_BYTE));
-//        ALLOWED_LAYOUTS_MAP.put(Void.class, MemoryLayout.sequenceLayout(0, ValueLayout.JAVA_BYTE));
-
-//        ALLOWED_LAYOUTS_MAP.put(String.class, ValueLayout.ADDRESS);
-    }
-
     private final Arena arena;
     private long capacity;
     private final Class<T> clazz;
@@ -114,9 +88,11 @@ public class ArenaDynArray<T> implements List<T> {
     }
 
     public ArenaDynArray(Class<T> clazz, long startCapacity, MemoryManagerType memoryManager) {
+        //TODO refactor constructor to be more clear and less complex
+        //TODO refactor because this must be the first line of the constructor, I don't like it
         this.typeConstant = TypeConstant.getBy(clazz);
         this.clazz = clazz;
-        this.layout = ALLOWED_LAYOUTS_MAP.get(clazz);
+        this.layout = typeConstant.layout;
 
         if (startCapacity < 0) {
             throw new IllegalArgumentException("Start length must be non negative");
@@ -186,7 +162,7 @@ public class ArenaDynArray<T> implements List<T> {
     }
 
     private void assertSupportedOperation() {
-        if (!ALLOWED_LAYOUTS_MAP.containsKey(clazz))
+        if (typeConstant.type!=clazz)
             throw new UnsupportedOperationException("Unsupported type " + clazz);
     }
 
