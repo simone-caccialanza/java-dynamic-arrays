@@ -42,7 +42,7 @@ class ArenaDynArrayTest {
 
     @Test
     void addThrowsOnUnsupportedType() {
-        assertThrows(IllegalArgumentException.class, () -> new ArenaDynArray<>(Object.class));
+        assertThrows(UnsupportedOperationException.class, () -> new ArenaDynArray<>(Object.class));
     }
 
     @Test
@@ -216,7 +216,7 @@ class ArenaDynArrayTest {
     @Test
     void removeIfThrowsOnNullPredicate() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
-        assertThrows(IllegalArgumentException.class, () -> array.removeIf(null));
+        assertThrows(NullPointerException.class, () -> array.removeIf(null));
     }
 
     @Test

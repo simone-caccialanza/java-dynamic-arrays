@@ -44,7 +44,7 @@ public class ArenaDynArray<T> implements List<T> {
 
         final Class<?> type;
         final ValueLayout layout;
-        final Object zero;
+        private final Object zero;
 
         TypeConstant(Class<?> type, ValueLayout layout, Object zero) {
             this.type = type;
@@ -92,7 +92,7 @@ public class ArenaDynArray<T> implements List<T> {
 //        ALLOWED_LAYOUTS_MAP.put(void.class, MemoryLayout.sequenceLayout(0, ValueLayout.JAVA_BYTE));
 //        ALLOWED_LAYOUTS_MAP.put(Void.class, MemoryLayout.sequenceLayout(0, ValueLayout.JAVA_BYTE));
 
-        ALLOWED_LAYOUTS_MAP.put(String.class, ValueLayout.ADDRESS);
+//        ALLOWED_LAYOUTS_MAP.put(String.class, ValueLayout.ADDRESS);
     }
 
     private final Arena arena;
@@ -114,9 +114,7 @@ public class ArenaDynArray<T> implements List<T> {
     }
 
     public ArenaDynArray(Class<T> clazz, long startCapacity, MemoryManagerType memoryManager) {
-        if (!ALLOWED_LAYOUTS_MAP.containsKey(clazz)) {
-            throw new IllegalArgumentException("Only primitive and wrapper types are allowed");
-        }
+        this.typeConstant = TypeConstant.getBy(clazz);
         this.clazz = clazz;
         this.layout = ALLOWED_LAYOUTS_MAP.get(clazz);
 
@@ -132,18 +130,17 @@ public class ArenaDynArray<T> implements List<T> {
             default -> throw new IllegalArgumentException("Unsupported memory manager type " + memoryManager);
         }
         if (arena == null) {
-            throw new RuntimeException("Could not allocate Arena");
+            throw new IllegalStateException("Could not allocate Arena");
         }
 
         MemoryLayout memoryLayout =
                 MemoryLayout.sequenceLayout(startCapacity, layout);
 
-        reader = getValueReader();
-        setter = getValueSetter();
+        this.reader = getValueReader();
+        this.setter = getValueSetter();
 
-        typeConstant = TypeConstant.getBy(clazz);
 
-        nativeValues = arena.allocate(memoryLayout.byteSize(), memoryLayout.byteAlignment());
+        this.nativeValues = arena.allocate(memoryLayout.byteSize(), memoryLayout.byteAlignment());
     }
 
     @Override
@@ -161,9 +158,6 @@ public class ArenaDynArray<T> implements List<T> {
         if (!(this.clazz.isAssignableFrom(o.getClass()))) {
             throw new IllegalArgumentException("Parameter of contains(Object) is not of type " + this.clazz);
         }
-        if (clazz == String.class) {
-            throw new UnsupportedOperationException("String is not yet supported");
-        }
         T t = clazz.cast(o);
         for (int i = 0; i < size; i++) {
             if (t.equals(get(i))) {
@@ -175,9 +169,7 @@ public class ArenaDynArray<T> implements List<T> {
 
     @Override
     public Iterator<T> iterator() {
-        if (clazz == String.class) {
-            throw new UnsupportedOperationException("String is not yet supported");
-        }
+        assertSupportedOperation();
         return new SimpleIterator<>();
     }
 
@@ -318,16 +310,19 @@ public class ArenaDynArray<T> implements List<T> {
 
     @Override
     public boolean removeAll(Collection<?> c) {
+        Objects.requireNonNull(c);
+        boolean modified = false;
         for (Object o : c) {
             while (remove(o)) {
+                modified = true;
             }
         }
-        return true;
+        return modified;
     }
 
     @Override
     public boolean removeIf(Predicate<? super T> filter) {
-        if (filter == null) throw new IllegalArgumentException();
+        Objects.requireNonNull(filter);
         boolean removed = false;
         if (size == 0) return false;
 
@@ -715,16 +710,13 @@ public class ArenaDynArray<T> implements List<T> {
     }
 
     private IntFunction<T> getValueReader() {
+        assertSupportedOperation();
         if (clazz == int.class || clazz == Integer.class) return this::getIntAtIndex;
         if (clazz == long.class || clazz == Long.class) return this::getLongAtIndex;
         if (clazz == float.class || clazz == Float.class) return this::getFloatAtIndex;
         if (clazz == double.class || clazz == Double.class) return this::getDoubleAtIndex;
         if (clazz == boolean.class || clazz == Boolean.class) return this::getBooleanAtIndex;
         if (clazz == char.class || clazz == Character.class) return this::getCharAtIndex;
-
-        if (clazz == String.class) {
-            throw new UnsupportedOperationException("String is not yet supported");
-        }
         throw new UnsupportedOperationException("Unsupported type " + clazz);
     }
 
@@ -753,16 +745,13 @@ public class ArenaDynArray<T> implements List<T> {
     }
 
     private BiConsumer<T, Integer> getValueSetter() {
+        assertSupportedOperation();
         if (clazz == int.class || clazz == Integer.class) return this::setIntAtIndex;
         if (clazz == long.class || clazz == Long.class) return this::setLongAtIndex;
         if (clazz == float.class || clazz == Float.class) return this::setFloatAtIndex;
         if (clazz == double.class || clazz == Double.class) return this::setDoubleAtIndex;
         if (clazz == boolean.class || clazz == Boolean.class) return this::setBooleanAtIndex;
         if (clazz == char.class || clazz == Character.class) return this::setCharAtIndex;
-
-        if (clazz == String.class) {
-            throw new UnsupportedOperationException("String is not yet supported");
-        }
         throw new UnsupportedOperationException("Unsupported type " + clazz);
     }
 
@@ -773,7 +762,7 @@ public class ArenaDynArray<T> implements List<T> {
         GLOBAL
     }
 
-    private class IntSort {
+    private static class IntSort {
         private static final ValueLayout layout = ValueLayout.JAVA_INT;
 
         private static int partition(MemorySegment arr, int low, int high, Comparator<? super Integer> c) {
@@ -809,7 +798,7 @@ public class ArenaDynArray<T> implements List<T> {
         }
     }
 
-    private class LongSort {
+    private static class LongSort {
         private static final ValueLayout layout = ValueLayout.JAVA_LONG;
 
         private static int partition(MemorySegment arr, int low, int high, Comparator<? super Long> c) {
@@ -840,7 +829,7 @@ public class ArenaDynArray<T> implements List<T> {
         }
     }
 
-    private class FloatSort {
+    private static class FloatSort {
         private static final ValueLayout layout = ValueLayout.JAVA_FLOAT;
 
         private static int partition(MemorySegment arr, int low, int high, Comparator<? super Float> c) {
@@ -871,7 +860,7 @@ public class ArenaDynArray<T> implements List<T> {
         }
     }
 
-    private class DoubleSort {
+    private static class DoubleSort {
         private static final ValueLayout layout = ValueLayout.JAVA_DOUBLE;
 
         private static int partition(MemorySegment arr, int low, int high, Comparator<? super Double> c) {
@@ -902,7 +891,7 @@ public class ArenaDynArray<T> implements List<T> {
         }
     }
 
-    private class CharSort {
+    private static class CharSort {
         private static final ValueLayout layout = ValueLayout.JAVA_CHAR;
 
         private static int partition(MemorySegment arr, int low, int high, Comparator<? super Character> c) {
@@ -933,7 +922,7 @@ public class ArenaDynArray<T> implements List<T> {
         }
     }
 
-    private class BooleanSort {
+    private static class BooleanSort {
         private static final ValueLayout layout = ValueLayout.JAVA_BOOLEAN;
 
         public static void sort(MemorySegment arr, int size) {
