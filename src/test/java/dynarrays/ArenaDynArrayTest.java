@@ -7,6 +7,7 @@ import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
 class ArenaDynArrayTest {
 
     void createIntArrayWithValues(ArenaDynArray<Integer> array, int... values) {
@@ -86,6 +87,7 @@ class ArenaDynArrayTest {
     }
 
     @Test
+    @SuppressWarnings("SuspiciousMethodCalls")
     void containsThrowsOnWrongType() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
         assertThrows(IllegalArgumentException.class, () -> array.contains("string"));
@@ -102,7 +104,7 @@ class ArenaDynArrayTest {
     void getThrowsOnInvalidIndex() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
         assertThrows(IndexOutOfBoundsException.class, () -> array.get(-1));
-        assertThrows(IndexOutOfBoundsException.class, () -> array.get(0));
+        assertThrows(IndexOutOfBoundsException.class, array::getFirst);
     }
 
     @Test
@@ -111,7 +113,7 @@ class ArenaDynArrayTest {
         array.add(1);
         Integer old = array.set(0, 99);
         assertEquals(1, old);
-        assertEquals(99, array.get(0));
+        assertEquals(99, array.getFirst());
     }
 
     @Test
@@ -153,6 +155,7 @@ class ArenaDynArrayTest {
     }
 
     @Test
+    @SuppressWarnings("SuspiciousMethodCalls")
     void removeByValueThrowsOnWrongType() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
         assertThrows(IllegalArgumentException.class, () -> array.remove("string"));
@@ -171,7 +174,7 @@ class ArenaDynArrayTest {
     @Test
     void removeAtIndexThrowsOnInvalidIndex() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
-        assertThrows(IndexOutOfBoundsException.class, () -> array.remove(0));
+        assertThrows(IndexOutOfBoundsException.class, array::removeFirst);
     }
 
     @Test
@@ -215,12 +218,14 @@ class ArenaDynArrayTest {
     }
 
     @Test
+    @SuppressWarnings("DataFlowIssue")
     void removeIfThrowsOnNullPredicate() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
         assertThrows(NullPointerException.class, () -> array.removeIf(null));
     }
 
     @Test
+    @SuppressWarnings("ConstantValue")
     void clearEmptiesArray() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
         createIntArrayWithValues(array, 1, 2, 3);
@@ -258,6 +263,7 @@ class ArenaDynArrayTest {
     }
 
     @Test
+    @SuppressWarnings("SuspiciousMethodCalls")
     void lastIndexOfThrowsOnWrongType() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
         assertThrows(IllegalArgumentException.class, () -> array.lastIndexOf("string"));
@@ -284,6 +290,7 @@ class ArenaDynArrayTest {
     }
 
     @Test
+    @SuppressWarnings("UseBulkOperation")
     void forEachExecutesActionOnAllElements() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
         createIntArrayWithValues(array, 1, 2, 3);
@@ -310,15 +317,7 @@ class ArenaDynArrayTest {
         array.add(5);
         array.addAll(Collections.emptyList());
         assertEquals(1, array.size());
-        assertEquals(5, array.get(0));
-    }
-
-    @Test
-    void addAllWithSingleElementAddsElement() {
-        ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
-        array.add(42);
-        assertEquals(1, array.size());
-        assertEquals(42, array.get(0));
+        assertEquals(5, array.getFirst());
     }
 
     @Test
@@ -348,10 +347,11 @@ class ArenaDynArrayTest {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
         array.add(10);
         array.set(0, 99);
-        assertEquals(99, array.get(0));
+        assertEquals(99, array.getFirst());
     }
 
     @Test
+    @SuppressWarnings("ConstantValue")
     void clearOnEmptyArrayKeepsSizeZero() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
         array.clear();
@@ -363,7 +363,7 @@ class ArenaDynArrayTest {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
         array.add(0, 5);
         assertEquals(1, array.size());
-        assertEquals(5, array.get(0));
+        assertEquals(5, array.getFirst());
     }
 
     @Test
@@ -526,7 +526,9 @@ class ArenaDynArrayTest {
             assertThrows(IllegalStateException.class, () -> arr.add(1));
         });
         t.start();
-        try { t.join(); } catch (InterruptedException _) {
+        try {
+            t.join();
+        } catch (InterruptedException _) {
             assert false;
         }
     }
@@ -538,7 +540,9 @@ class ArenaDynArrayTest {
             assertDoesNotThrow(() -> arr.add(2));
         });
         t.start();
-        try { t.join(); } catch (InterruptedException _) {
+        try {
+            t.join();
+        } catch (InterruptedException _) {
             assert false;
         }
     }
@@ -550,12 +554,14 @@ class ArenaDynArrayTest {
             assertDoesNotThrow(() -> arr.add(3));
         });
         t.start();
-        try { t.join(); } catch (InterruptedException _) {
+        try {
+            t.join();
+        } catch (InterruptedException _) {
             assert false;
         }
     }
 
-    // ==================== CORNER CASES E TEST AGGIUNTIVI ====================
+    // ==================== CORNER CASES ====================
 
     @Test
     void addThrowsOnNegativeCapacity() {
@@ -578,7 +584,7 @@ class ArenaDynArrayTest {
     void addAllReturnsFalseWhenCollectionIsEmpty() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
         boolean result = array.addAll(Collections.emptyList());
-        assertTrue(result); // addAll sempre ritorna true nell'implementazione
+        assertTrue(result); // addAll always returns true
         assertEquals(0, array.size());
     }
 
@@ -587,7 +593,7 @@ class ArenaDynArrayTest {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
         array.addAll(0, List.of(1, 2, 3));
         assertEquals(3, array.size());
-        assertEquals(1, array.get(0));
+        assertEquals(1, array.getFirst());
     }
 
     @Test
@@ -600,6 +606,7 @@ class ArenaDynArrayTest {
     }
 
     @Test
+    @SuppressWarnings("SuspiciousMethodCalls")
     void containsAllWithEmptyCollection() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
         array.add(1);
@@ -609,10 +616,11 @@ class ArenaDynArrayTest {
     @Test
     void containsAllOnEmptyArray() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
-        assertFalse(array.containsAll(List.of(1)));
+        assertFalse(array.containsAll(List.of(1, 2, 3)));
     }
 
     @Test
+    @SuppressWarnings("SuspiciousMethodCalls")
     void removeAllWithEmptyCollection() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
         createIntArrayWithValues(array, 1, 2, 3);
@@ -659,10 +667,11 @@ class ArenaDynArrayTest {
     }
 
     @Test
+    @SuppressWarnings("SequencedCollectionMethodCanBeUsed")
     void removeAtFirstIndex() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
         createIntArrayWithValues(array, 1, 2, 3);
-        Integer removed = array.remove(0);
+        Integer removed = array.removeFirst();
         assertEquals(1, removed);
         assertEquals(2, array.size());
         assertEquals(2, array.get(0));
@@ -675,6 +684,7 @@ class ArenaDynArrayTest {
     }
 
     @Test
+    @SuppressWarnings("SuspiciousMethodCalls")
     void indexOfThrowsOnWrongType() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
         assertThrows(ClassCastException.class, () -> array.indexOf("string"));
@@ -694,6 +704,7 @@ class ArenaDynArrayTest {
     }
 
     @Test
+    @SuppressWarnings("UseBulkOperation")
     void forEachOnEmptyArray() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
         List<Integer> result = new ArrayList<>();
@@ -714,7 +725,7 @@ class ArenaDynArrayTest {
         array.add(42);
         array.sort(Comparator.naturalOrder());
         assertEquals(1, array.size());
-        assertEquals(42, array.get(0));
+        assertEquals(42, array.getFirst());
     }
 
     @Test
@@ -733,6 +744,7 @@ class ArenaDynArrayTest {
     }
 
     @Test
+    @SuppressWarnings("SuspiciousToArrayCall")
     void toArrayWithWrongTypeThrows() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
         array.add(1);
@@ -775,16 +787,6 @@ class ArenaDynArrayTest {
         array.addLast(3);
         assertEquals(3, array.size());
         assertEquals(3, array.get(2));
-    }
-
-    @Test
-    void removeFirstRemovesFirstElement() {
-        ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
-        createIntArrayWithValues(array, 1, 2, 3);
-        Integer removed = array.removeFirst();
-        assertEquals(1, removed);
-        assertEquals(2, array.size());
-        assertEquals(2, array.getFirst());
     }
 
     @Test
@@ -870,7 +872,7 @@ class ArenaDynArrayTest {
         it.next();
         it.remove();
         assertEquals(2, array.size());
-        assertEquals(2, array.get(0));
+        assertEquals(2, array.getFirst());
     }
 
     @Test
@@ -880,7 +882,7 @@ class ArenaDynArrayTest {
         ListIterator<Integer> it = array.listIterator();
         it.next();
         it.set(99);
-        assertEquals(99, array.get(0));
+        assertEquals(99, array.getFirst());
     }
 
     @Test
@@ -959,7 +961,7 @@ class ArenaDynArrayTest {
         assertTrue(collected.containsAll(List.of(1, 2, 3, 4, 5)));
     }
 
-    // ==================== TEST CON ALTRI TIPI ====================
+    // ==================== TEST WITH OTHER TYPES ====================
 
     @Test
     void longArrayWorks() {
@@ -987,7 +989,7 @@ class ArenaDynArrayTest {
         array.add(1.5f);
         array.add(2.5f);
         assertEquals(2, array.size());
-        assertEquals(1.5f, array.get(0));
+        assertEquals(1.5f, array.getFirst());
     }
 
     @Test
@@ -1006,7 +1008,7 @@ class ArenaDynArrayTest {
         array.add(1.5);
         array.add(2.5);
         assertEquals(2, array.size());
-        assertEquals(1.5, array.get(0));
+        assertEquals(1.5, array.getFirst());
     }
 
     @Test
@@ -1065,7 +1067,7 @@ class ArenaDynArrayTest {
         assertEquals(true, array.get(3));
     }
 
-    // ==================== TEST DI STRESS E CAPACITÀ ====================
+    // ==================== STRESS TESTS AND CAPACITY TESTS ====================
 
     @Test
     void addManyElementsTriggersMultipleReallocations() {
@@ -1074,7 +1076,7 @@ class ArenaDynArrayTest {
             array.add(i);
         }
         assertEquals(100, array.size());
-        assertEquals(0, array.get(0));
+        assertEquals(0, array.getFirst());
         assertEquals(99, array.get(99));
     }
 
@@ -1085,7 +1087,7 @@ class ArenaDynArrayTest {
         array.clear();
         createIntArrayWithValues(array, 4, 5, 6);
         assertEquals(3, array.size());
-        assertEquals(4, array.get(0));
+        assertEquals(4, array.getFirst());
     }
 
     @Test
