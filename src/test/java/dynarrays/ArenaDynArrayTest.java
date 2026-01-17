@@ -66,8 +66,9 @@ class ArenaDynArrayTest {
     @Test
     void addAllAtIndexThrowsOnInvalidIndex() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
-        assertThrows(IndexOutOfBoundsException.class, () -> array.addAll(-1, List.of(1)));
-        assertThrows(IndexOutOfBoundsException.class, () -> array.addAll(1, List.of(1)));
+        var list = List.of(1, 2, 3);
+        assertThrows(IndexOutOfBoundsException.class, () -> array.addAll(-1, list));
+        assertThrows(IndexOutOfBoundsException.class, () -> array.addAll(1, list));
     }
 
     @Test
@@ -271,7 +272,8 @@ class ArenaDynArrayTest {
     @Test
     void iteratorNextThrowsOnEmptyArray() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
-        assertThrows(NoSuchElementException.class, () -> array.iterator().next());
+        var iterator = array.iterator();
+        assertThrows(NoSuchElementException.class, iterator::next);
     }
 
     @Test
@@ -524,7 +526,9 @@ class ArenaDynArrayTest {
             assertThrows(IllegalStateException.class, () -> arr.add(1));
         });
         t.start();
-        try { t.join(); } catch (InterruptedException ignored) {}
+        try { t.join(); } catch (InterruptedException _) {
+            assert false;
+        }
     }
 
     @Test
@@ -534,7 +538,9 @@ class ArenaDynArrayTest {
             assertDoesNotThrow(() -> arr.add(2));
         });
         t.start();
-        try { t.join(); } catch (InterruptedException ignored) {}
+        try { t.join(); } catch (InterruptedException _) {
+            assert false;
+        }
     }
 
     @Test
@@ -544,7 +550,9 @@ class ArenaDynArrayTest {
             assertDoesNotThrow(() -> arr.add(3));
         });
         t.start();
-        try { t.join(); } catch (InterruptedException ignored) {}
+        try { t.join(); } catch (InterruptedException _) {
+            assert false;
+        }
     }
 
     // ==================== CORNER CASES E TEST AGGIUNTIVI ====================
@@ -932,7 +940,8 @@ class ArenaDynArrayTest {
     @Test
     void retainAllThrowsUnsupportedOperationException() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
-        assertThrows(UnsupportedOperationException.class, () -> array.retainAll(List.of(1)));
+        var list = List.of(1, 2, 3);
+        assertThrows(UnsupportedOperationException.class, () -> array.retainAll(list));
     }
 
     @Test
