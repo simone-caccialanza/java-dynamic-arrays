@@ -36,8 +36,8 @@ public class ArenaDynArray<T> implements List<T> {
         DOUBLE_PRIMITIVE(double.class, ValueLayout.JAVA_DOUBLE, 0d),
         DOUBLE_WRAPPER(Double.class, ValueLayout.JAVA_DOUBLE, 0d),
 
-        BOOLEAN_PRIMITIVE(boolean.class, ValueLayout.JAVA_BYTE, false),
-        BOOLEAN_WRAPPER(Boolean.class, ValueLayout.JAVA_BYTE, false),
+        BOOLEAN_PRIMITIVE(boolean.class, ValueLayout.JAVA_BOOLEAN, false),
+        BOOLEAN_WRAPPER(Boolean.class, ValueLayout.JAVA_BOOLEAN, false),
 
         CHAR_PRIMITIVE(char.class, ValueLayout.JAVA_CHAR, '\0'),
         CHAR_WRAPPER(Character.class, ValueLayout.JAVA_CHAR, '\0');
@@ -83,8 +83,8 @@ public class ArenaDynArray<T> implements List<T> {
         ALLOWED_LAYOUTS_MAP.put(double.class, ValueLayout.JAVA_DOUBLE);
         ALLOWED_LAYOUTS_MAP.put(Double.class, ValueLayout.JAVA_DOUBLE);
 
-        ALLOWED_LAYOUTS_MAP.put(boolean.class, ValueLayout.JAVA_BYTE);
-        ALLOWED_LAYOUTS_MAP.put(Boolean.class, ValueLayout.JAVA_BYTE);
+        ALLOWED_LAYOUTS_MAP.put(boolean.class, ValueLayout.JAVA_BOOLEAN);
+        ALLOWED_LAYOUTS_MAP.put(Boolean.class, ValueLayout.JAVA_BOOLEAN);
 
         ALLOWED_LAYOUTS_MAP.put(char.class, ValueLayout.JAVA_CHAR);
         ALLOWED_LAYOUTS_MAP.put(Character.class, ValueLayout.JAVA_CHAR);
@@ -96,7 +96,7 @@ public class ArenaDynArray<T> implements List<T> {
     }
 
     private final Arena arena;
-    private final long capacity;
+    private long capacity;
     private final Class<T> clazz;
     private final ValueLayout layout;
     private final IntFunction<T> reader;
@@ -120,8 +120,8 @@ public class ArenaDynArray<T> implements List<T> {
         this.clazz = clazz;
         this.layout = ALLOWED_LAYOUTS_MAP.get(clazz);
 
-        if (startCapacity <= 0) {
-            throw new IllegalArgumentException("Start length must be positive");
+        if (startCapacity < 0) {
+            throw new IllegalArgumentException("Start length must be non negative");
         }
         this.capacity = startCapacity;
 
@@ -531,7 +531,7 @@ public class ArenaDynArray<T> implements List<T> {
 
             @Override
             public void add(T t) {
-                ArenaDynArray.this.add(t);
+                ArenaDynArray.this.add(cursor++,t);
             }
         };
     }
@@ -674,15 +674,20 @@ public class ArenaDynArray<T> implements List<T> {
             MemorySegment newNativeValues = arena.allocate(layout.byteSize() * newCapacity, layout.byteAlignment());
             MemorySegment.copy(nativeValues, 0, newNativeValues, 0, nativeValues.byteSize());
             nativeValues = newNativeValues;
+            capacity = newCapacity;
         }
     }
 
     private void shiftLeftValuesAtIndex(int i) {
-        MemorySegment.copy(nativeValues, (i + 1) * layout.byteSize(), nativeValues, i * layout.byteSize(), (size - i - 1) * layout.byteSize());
+        if (size - i - 1 > 0) {
+            MemorySegment.copy(nativeValues, (i + 1) * layout.byteSize(), nativeValues, i * layout.byteSize(), (size - i - 1) * layout.byteSize());
+        }
     }
 
     private void shiftRightValuesAtIndex(int i) {
-        MemorySegment.copy(nativeValues, i * layout.byteSize(), nativeValues, (i + 1) * layout.byteSize(), (size - i) * layout.byteSize());
+        if (size - i - 1 > 0) {
+            MemorySegment.copy(nativeValues, i * layout.byteSize(), nativeValues, (i + 1) * layout.byteSize(), (size - i - 1) * layout.byteSize());
+        }
     }
 
     private T getIntAtIndex(int i) {
