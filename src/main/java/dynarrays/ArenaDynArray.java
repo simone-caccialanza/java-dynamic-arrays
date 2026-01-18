@@ -146,7 +146,7 @@ public class ArenaDynArray<T> implements List<T> {
     @Override
     public Iterator<T> iterator() {
         assertSupportedOperation();
-        return new SimpleIterator<>();
+        return new SimpleIterator();
     }
 
     @Override
@@ -779,7 +779,7 @@ public class ArenaDynArray<T> implements List<T> {
         }
     }
 
-    protected class SimpleIterator<R extends T> implements Iterator<T> { //TODO fixme
+    protected class SimpleIterator implements Iterator<T> {
 
         protected int index = 0;
 
