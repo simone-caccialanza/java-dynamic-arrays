@@ -70,13 +70,13 @@ public class ArenaDynArray<T> implements List<T> {
     }
 
     private final Arena arena;
-    private long capacity;
     private final Class<T> clazz;
     private final ValueLayout layout;
     private final IntFunction<T> reader;
     private final BiConsumer<T, Integer> setter;
+    private final T zero;
     private MemorySegment nativeValues;
-    private final TypeConstant typeConstant;
+    private long capacity;
     private int size = 0;
 
     public ArenaDynArray(Class<T> clazz) {
@@ -89,10 +89,9 @@ public class ArenaDynArray<T> implements List<T> {
 
     public ArenaDynArray(Class<T> clazz, long startCapacity, MemoryManagerType memoryManager) {
         //TODO refactor constructor to be more clear and less complex
-        //TODO refactor because this must be the first line of the constructor, I don't like it
-        this.typeConstant = TypeConstant.getBy(clazz);
         this.clazz = clazz;
-        this.layout = typeConstant.layout;
+        this.layout = TypeConstant.getBy(clazz).layout;
+        this.zero = TypeConstant.getBy(clazz).zero();
 
         if (startCapacity < 0) {
             throw new IllegalArgumentException("Start length must be non negative");
@@ -162,7 +161,7 @@ public class ArenaDynArray<T> implements List<T> {
     }
 
     private void assertSupportedOperation() {
-        if (typeConstant.type != clazz)
+        if (TypeConstant.getBy(clazz).type != clazz)
             throw new UnsupportedOperationException("Unsupported type " + clazz);
     }
 
@@ -310,7 +309,7 @@ public class ArenaDynArray<T> implements List<T> {
                 shiftLeftValuesAtIndex(i);
 
                 final int lastIndex = size - 1;
-                set(lastIndex, typeConstant.zero());
+                set(lastIndex, zero);
 
                 size--;
                 removed = true;
@@ -381,7 +380,7 @@ public class ArenaDynArray<T> implements List<T> {
             throw new IndexOutOfBoundsException(); // TODO can refactor in checkOutOfBounds()
         T oldValue = clazz.cast(get(index));
         shiftLeftValuesAtIndex(index);
-        set(size - 1, typeConstant.zero());
+        set(size - 1, zero);
         size--;
         return oldValue;
     }
@@ -759,7 +758,7 @@ public class ArenaDynArray<T> implements List<T> {
         }
     }
 
-    private void booleanSort(){
+    private void booleanSort() {
         int i = 0;
         int j = size - 1;
         while (i < j) {
