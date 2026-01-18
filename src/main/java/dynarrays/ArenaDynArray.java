@@ -596,32 +596,32 @@ public class ArenaDynArray<T> implements List<T> {
 
     @Override
     public void addFirst(T t) {
-        List.super.addFirst(t);
+        this.add(0, t);
     }
 
     @Override
     public void addLast(T t) {
-        List.super.addLast(t);
+        this.add(size, t);
     }
 
     @Override
     public T getFirst() {
-        return List.super.getFirst();
+        return this.get(0);
     }
 
     @Override
     public T getLast() {
-        return List.super.getLast();
+        return this.get(size - 1);
     }
 
     @Override
     public T removeFirst() {
-        return List.super.removeFirst();
+        return this.remove(0);
     }
 
     @Override
     public T removeLast() {
-        return List.super.removeLast();
+        return this.remove(size - 1);
     }
 
     @Override

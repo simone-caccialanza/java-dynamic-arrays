@@ -172,9 +172,10 @@ class ArenaDynArrayTest {
     }
 
     @Test
+    @SuppressWarnings("SequencedCollectionMethodCanBeUsed")
     void removeAtIndexThrowsOnInvalidIndex() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
-        assertThrows(IndexOutOfBoundsException.class, array::removeFirst);
+        assertThrows(IndexOutOfBoundsException.class, () -> array.remove(0));
     }
 
     @Test
@@ -754,13 +755,13 @@ class ArenaDynArrayTest {
     @Test
     void getFirstOnEmptyArrayThrows() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
-        assertThrows(NoSuchElementException.class, array::getFirst);
+        assertThrows(IndexOutOfBoundsException.class, array::getFirst);
     }
 
     @Test
     void getLastOnEmptyArrayThrows() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
-        assertThrows(NoSuchElementException.class, array::getLast);
+        assertThrows(IndexOutOfBoundsException.class, array::getLast);
     }
 
     @Test
@@ -802,13 +803,13 @@ class ArenaDynArrayTest {
     @Test
     void removeFirstOnEmptyArrayThrows() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
-        assertThrows(NoSuchElementException.class, array::removeFirst);
+        assertThrows(IndexOutOfBoundsException.class, array::removeFirst);
     }
 
     @Test
     void removeLastOnEmptyArrayThrows() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
-        assertThrows(NoSuchElementException.class, array::removeLast);
+        assertThrows(IndexOutOfBoundsException.class, array::removeLast);
     }
 
     @Test
