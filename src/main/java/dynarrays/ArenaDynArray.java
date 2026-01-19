@@ -12,11 +12,6 @@ import java.util.stream.Stream;
 
 public class ArenaDynArray<T> implements List<T> {
 
-    // TODO review all exceptions:
-    // - add messages
-    // - check the right exception type is used
-    // - refactor some usual checks like out of bounds cases
-
     //TODO implement string
     //TODO implement void
 
@@ -58,7 +53,7 @@ public class ArenaDynArray<T> implements List<T> {
         static TypeConstant getBy(Class<?> clazz) {
             TypeConstant tc = BY_TYPE.get(clazz);
             if (tc == null) {
-                throw new UnsupportedOperationException("Unsupported type " + clazz);
+                throw new UnsupportedDynArrayTypeException(clazz);
             }
             return tc;
         }
@@ -150,7 +145,7 @@ public class ArenaDynArray<T> implements List<T> {
 
     @Override
     public void forEach(Consumer<? super T> action) {
-        if (action == null) throw new NullPointerException();
+        Objects.requireNonNull(action);
         if (size == 0) return;
         assertSupportedOperation();
 
@@ -162,7 +157,7 @@ public class ArenaDynArray<T> implements List<T> {
 
     private void assertSupportedOperation() {
         if (TypeConstant.getBy(clazz).type != clazz)
-            throw new UnsupportedOperationException("Unsupported type " + clazz);
+            throw new UnsupportedDynArrayTypeException(clazz);
     }
 
     @Override
@@ -273,7 +268,7 @@ public class ArenaDynArray<T> implements List<T> {
 
     @Override
     public boolean addAll(int index, Collection<? extends T> c) {
-        if (index < 0 || index > size) throw new IndexOutOfBoundsException();
+        checkIndexOutOfBounds(index);
         boolean modified = false;
         int insertIndex = index;
         for (T t : c) {
@@ -281,6 +276,10 @@ public class ArenaDynArray<T> implements List<T> {
             modified = true;
         }
         return modified;
+    }
+
+    private void checkIndexOutOfBounds(int index) {
+        if (index < 0 || index > size) throw new IndexOutOfBoundsException("Index " + index + " is out of bounds for size " + size);
     }
 
     @Override
@@ -324,18 +323,18 @@ public class ArenaDynArray<T> implements List<T> {
 
     @Override
     public boolean retainAll(Collection<?> c) {
-        throw new UnsupportedOperationException("Not yet implemented");
+        throw new UnsupportedOperationException("ArenaDynArray.retainAll(Collection<?>) is not implemented yet");
     }
 
     @Override
     public void replaceAll(UnaryOperator<T> operator) {
-        throw new UnsupportedOperationException("Not yet implemented");
+        throw new UnsupportedOperationException("ArenaDynArray.replaceAll(UnaryOperator<T>) is not implemented yet");
     }
 
     @Override
     public void sort(Comparator<? super T> c) {
         assertSupportedOperation();
-        if (c == null) throw new NullPointerException();
+        Objects.requireNonNull(c);
         if (size == 0) return;
         if (clazz == boolean.class || clazz == Boolean.class) {
             booleanSort();
@@ -352,13 +351,13 @@ public class ArenaDynArray<T> implements List<T> {
 
     @Override
     public T get(int index) {
-        if (index < 0 || index >= size) throw new IndexOutOfBoundsException();
+        checkIndexOutOfBounds(index);
         return reader.apply(index);
     }
 
     @Override
     public T set(int index, T element) {
-        if (index < 0 || index >= size) throw new IndexOutOfBoundsException();
+        checkIndexOutOfBounds(index);
         checkSizeAndRealloc();
         T oldValue = get(index);
         setter.accept(element, index);
@@ -367,7 +366,7 @@ public class ArenaDynArray<T> implements List<T> {
 
     @Override
     public void add(int index, T element) {
-        if (index < 0 || index > size) throw new IndexOutOfBoundsException();
+        checkIndexOutOfBounds(index);
         size++;
         checkSizeAndRealloc();
         shiftRightValuesAtIndex(index);
@@ -376,8 +375,7 @@ public class ArenaDynArray<T> implements List<T> {
 
     @Override
     public T remove(int index) {
-        if (index < 0 || index >= size)
-            throw new IndexOutOfBoundsException(); // TODO can refactor in checkOutOfBounds()
+        checkIndexOutOfBounds(index);
         T oldValue = clazz.cast(get(index));
         shiftLeftValuesAtIndex(index);
         set(size - 1, zero);
@@ -396,7 +394,6 @@ public class ArenaDynArray<T> implements List<T> {
         } else {
             T t = clazz.cast(o);
             if (!(this.clazz.isAssignableFrom(o.getClass()))) {
-                // TODO can refactor using a standard message for IllegalArgumentException
                 throw new IllegalArgumentException("Parameter of indexOf(Object) is not of type " + this.clazz);
             }
             for (int i = 0; i < size; i++) {
@@ -497,9 +494,7 @@ public class ArenaDynArray<T> implements List<T> {
 
     @Override
     public ListIterator<T> listIterator(int index) {
-        if (index < 0 || index > size) {
-            throw new IndexOutOfBoundsException();
-        }
+        checkIndexOutOfBounds(index);
 
         return new ListIterator<T>() {
             private int cursor = index;
@@ -565,8 +560,9 @@ public class ArenaDynArray<T> implements List<T> {
 
     @Override
     public List<T> subList(int fromIndex, int toIndex) {
-        if (fromIndex < 0 || toIndex > size || fromIndex > toIndex) {
-            throw new IndexOutOfBoundsException();
+        checkIndexOutOfBounds(fromIndex);
+        if (fromIndex > toIndex) {
+            throw new IndexOutOfBoundsException("fromIndex" + fromIndex + "is greater than toIndex" + toIndex);
         }
         ArenaDynArray<T> subList = new ArenaDynArray<>(clazz, (short) (toIndex - fromIndex));
 
@@ -614,7 +610,7 @@ public class ArenaDynArray<T> implements List<T> {
 
     @Override
     public List<T> reversed() {
-        throw new UnsupportedOperationException("Can't reverse " + this.getClass().getSimpleName());
+        throw new UnsupportedOperationException("ArenaDynArray.reversed(Collection<?>) is not implemented yet");
     }
 
     @Override
@@ -681,7 +677,7 @@ public class ArenaDynArray<T> implements List<T> {
         if (clazz == double.class || clazz == Double.class) return this::getDoubleAtIndex;
         if (clazz == boolean.class || clazz == Boolean.class) return this::getBooleanAtIndex;
         if (clazz == char.class || clazz == Character.class) return this::getCharAtIndex;
-        throw new UnsupportedOperationException("Unsupported type " + clazz);
+        throw new UnsupportedDynArrayTypeException(clazz);
     }
 
     private void setIntAtIndex(T n, Integer i) {
@@ -716,7 +712,7 @@ public class ArenaDynArray<T> implements List<T> {
         if (clazz == double.class || clazz == Double.class) return this::setDoubleAtIndex;
         if (clazz == boolean.class || clazz == Boolean.class) return this::setBooleanAtIndex;
         if (clazz == char.class || clazz == Character.class) return this::setCharAtIndex;
-        throw new UnsupportedOperationException("Unsupported type " + clazz);
+        throw new UnsupportedDynArrayTypeException(clazz);
     }
 
 
