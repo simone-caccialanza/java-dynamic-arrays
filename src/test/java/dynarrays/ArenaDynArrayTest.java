@@ -43,7 +43,7 @@ class ArenaDynArrayTest {
 
     @Test
     void addThrowsOnUnsupportedType() {
-        assertThrows(UnsupportedOperationException.class, () -> new ArenaDynArray<>(Object.class));
+        assertThrows(UnsupportedDynArrayTypeException.class, () -> new ArenaDynArray<>(Object.class));
     }
 
     @Test

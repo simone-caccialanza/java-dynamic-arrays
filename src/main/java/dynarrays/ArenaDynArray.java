@@ -14,6 +14,7 @@ public class ArenaDynArray<T> implements List<T> {
 
     //TODO implement string
     //TODO implement void
+    //TODO check parent class documentation and throw the requested exceptions
 
     private static final short DEFAULT_START_CAPACITY = 8;
 
@@ -228,7 +229,10 @@ public class ArenaDynArray<T> implements List<T> {
 
     @Override
     public boolean add(T element) {
-        add(size, element);
+        //TODO check size overflow
+        size++;
+        checkSizeAndRealloc();
+        set(size - 1, element);
         return true;
     }
 
@@ -268,7 +272,6 @@ public class ArenaDynArray<T> implements List<T> {
 
     @Override
     public boolean addAll(int index, Collection<? extends T> c) {
-        checkIndexOutOfBounds(index);
         boolean modified = false;
         int insertIndex = index;
         for (T t : c) {
@@ -276,10 +279,6 @@ public class ArenaDynArray<T> implements List<T> {
             modified = true;
         }
         return modified;
-    }
-
-    private void checkIndexOutOfBounds(int index) {
-        if (index < 0 || index > size) throw new IndexOutOfBoundsException("Index " + index + " is out of bounds for size " + size);
     }
 
     @Override
@@ -366,7 +365,7 @@ public class ArenaDynArray<T> implements List<T> {
 
     @Override
     public void add(int index, T element) {
-        checkIndexOutOfBounds(index);
+        checkIndexOutOfBoundsForAdd(index);
         size++;
         checkSizeAndRealloc();
         shiftRightValuesAtIndex(index);
@@ -561,6 +560,7 @@ public class ArenaDynArray<T> implements List<T> {
     @Override
     public List<T> subList(int fromIndex, int toIndex) {
         checkIndexOutOfBounds(fromIndex);
+        checkIndexOutOfBounds(toIndex);
         if (fromIndex > toIndex) {
             throw new IndexOutOfBoundsException("fromIndex" + fromIndex + "is greater than toIndex" + toIndex);
         }
@@ -624,12 +624,13 @@ public class ArenaDynArray<T> implements List<T> {
     }
 
     private void checkSizeAndRealloc() {
-        if (size == capacity) {
+        if (size >= capacity) {
             var newCapacity = capacity == 0 ? 1 : capacity * 2;
             MemorySegment newNativeValues = arena.allocate(layout.byteSize() * newCapacity, layout.byteAlignment());
             MemorySegment.copy(nativeValues, 0, newNativeValues, 0, nativeValues.byteSize());
             nativeValues = newNativeValues;
             capacity = newCapacity;
+            checkSizeAndRealloc();
         }
     }
 
@@ -643,6 +644,13 @@ public class ArenaDynArray<T> implements List<T> {
         if (size - i - 1 > 0) {
             MemorySegment.copy(nativeValues, i * layout.byteSize(), nativeValues, (i + 1) * layout.byteSize(), (size - i - 1) * layout.byteSize());
         }
+    }
+
+    private void checkIndexOutOfBounds(int index) {
+        if (index < 0 || index >= size) throw new IndexOutOfBoundsException("Index " + index + " is out of bounds for size " + size);
+    }
+    private void checkIndexOutOfBoundsForAdd(int index) {
+        if (index < 0 || index > size) throw new IndexOutOfBoundsException("Index " + index + " is out of bounds for size " + size);
     }
 
     private T getIntAtIndex(int i) {
