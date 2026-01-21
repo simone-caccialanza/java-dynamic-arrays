@@ -126,6 +126,7 @@ public class ArenaDynArray<T> implements List<T> {
 
     @Override
     public boolean contains(Object o) {
+        if (o == null) {return indexOf(null) != -1;}
         if (!(this.clazz.isAssignableFrom(o.getClass()))) {
             throw new IllegalArgumentException("Parameter of contains(Object) is not of type " + this.clazz);
         }
@@ -786,6 +787,9 @@ public class ArenaDynArray<T> implements List<T> {
 
         protected int index = 0;
 
+        // indice dell'ultimo elemento restituito da next(); -1 => nessuno / remove non permesso
+        protected int lastReturned = -1;
+
         @Override
         public final boolean hasNext() {
             return index < size;
@@ -796,11 +800,22 @@ public class ArenaDynArray<T> implements List<T> {
             if (!hasNext()) {
                 throw new NoSuchElementException();
             }
+            lastReturned = index;
             return nextElement(index++);
         }
 
         protected T nextElement(int index) {
             return get(index);
+        }
+
+        @Override
+        public void remove() {
+            if (lastReturned < 0) {
+                throw new IllegalStateException();
+            }
+            ArenaDynArray.this.remove(lastReturned);
+            index = lastReturned;
+            lastReturned = -1;
         }
     }
 
