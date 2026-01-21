@@ -429,7 +429,7 @@ public class ArenaDynArray<T> implements List<T> {
 
     @Override
     public ListIterator<T> listIterator() {
-        return new ListIterator<T>() {
+        return new ListIterator<>() {
             private int cursor = 0;
             private int lastCursor = 0;
 
@@ -495,7 +495,7 @@ public class ArenaDynArray<T> implements List<T> {
     public ListIterator<T> listIterator(int index) {
         checkIndexOutOfBounds(index);
 
-        return new ListIterator<T>() {
+        return new ListIterator<>() {
             private int cursor = index;
             private int lastCursor = index;
 

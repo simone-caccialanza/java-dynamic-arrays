@@ -520,12 +520,10 @@ class ArenaDynArrayTest {
     }
 
     @Test
-    @Disabled("testConfinedArenaThreadViolation -> Renable when reviewing implementation")
+    @Disabled("testConfinedArenaThreadViolation -> Re-enable when reviewing implementation")
     void testConfinedArenaThreadViolation() {
         ArenaDynArray<Integer> arr = new ArenaDynArray<>(Integer.class, 8, ArenaDynArray.MemoryManagerType.CONFINED);
-        Thread t = new Thread(() -> {
-            assertThrows(IllegalStateException.class, () -> arr.add(1));
-        });
+        Thread t = new Thread(() -> assertThrows(IllegalStateException.class, () -> arr.add(1)));
         t.start();
         try {
             t.join();
@@ -537,9 +535,7 @@ class ArenaDynArrayTest {
     @Test
     void testSharedArenaThreadAccess() {
         ArenaDynArray<Integer> arr = new ArenaDynArray<>(Integer.class, 8, ArenaDynArray.MemoryManagerType.SHARED);
-        Thread t = new Thread(() -> {
-            assertDoesNotThrow(() -> arr.add(2));
-        });
+        Thread t = new Thread(() -> assertDoesNotThrow(() -> arr.add(2)));
         t.start();
         try {
             t.join();
@@ -551,9 +547,7 @@ class ArenaDynArrayTest {
     @Test
     void testGlobalArenaThreadAccess() {
         ArenaDynArray<Integer> arr = new ArenaDynArray<>(Integer.class, 8, ArenaDynArray.MemoryManagerType.GLOBAL);
-        Thread t = new Thread(() -> {
-            assertDoesNotThrow(() -> arr.add(3));
-        });
+        Thread t = new Thread(() -> assertDoesNotThrow(() -> arr.add(3)));
         t.start();
         try {
             t.join();
@@ -649,7 +643,7 @@ class ArenaDynArrayTest {
     @Test
     void removeIfOnEmptyArray() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
-        assertFalse(array.removeIf(i -> true));
+        assertFalse(array.removeIf(_ -> true));
     }
 
     @Test
@@ -1061,7 +1055,7 @@ class ArenaDynArrayTest {
         array.add(true);
         array.add(false);
         array.sort(Comparator.naturalOrder());
-        // false < true, quindi dovrebbe essere [false, false, true, true]
+        // false < true -> [false, false, true, true]
         assertEquals(false, array.get(0));
         assertEquals(false, array.get(1));
         assertEquals(true, array.get(2));
