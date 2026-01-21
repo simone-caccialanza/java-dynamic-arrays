@@ -15,6 +15,7 @@ public class ArenaDynArray<T> implements List<T> {
     //TODO implement string
     //TODO implement void
     //TODO check parent class documentation and throw the requested exceptions
+    //TODO can I implement sort()?
 
     private static final short DEFAULT_START_CAPACITY = 8;
 
@@ -126,7 +127,9 @@ public class ArenaDynArray<T> implements List<T> {
 
     @Override
     public boolean contains(Object o) {
-        if (o == null) {return indexOf(null) != -1;}
+        if (o == null) {
+            return indexOf(null) != -1;
+        }
         if (!(this.clazz.isAssignableFrom(o.getClass()))) {
             throw new IllegalArgumentException("Parameter of contains(Object) is not of type " + this.clazz);
         }
@@ -332,12 +335,14 @@ public class ArenaDynArray<T> implements List<T> {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void sort(Comparator<? super T> c) {
         assertSupportedOperation();
         Objects.requireNonNull(c);
         if (size == 0) return;
         if (clazz == boolean.class || clazz == Boolean.class) {
-            booleanSort();
+            Comparator<Boolean> booleanComparator = (Comparator<Boolean>) c;
+            booleanSort(booleanComparator);
         } else {
             quickSort(0, size - 1, c);
         }
@@ -648,10 +653,13 @@ public class ArenaDynArray<T> implements List<T> {
     }
 
     private void checkIndexOutOfBounds(int index) {
-        if (index < 0 || index >= size) throw new IndexOutOfBoundsException("Index " + index + " is out of bounds for size " + size);
+        if (index < 0 || index >= size)
+            throw new IndexOutOfBoundsException("Index " + index + " is out of bounds for size " + size);
     }
+
     private void checkIndexOutOfBoundsForAdd(int index) {
-        if (index < 0 || index > size) throw new IndexOutOfBoundsException("Index " + index + " is out of bounds for size " + size);
+        if (index < 0 || index > size)
+            throw new IndexOutOfBoundsException("Index " + index + " is out of bounds for size " + size);
     }
 
     private T getIntAtIndex(int i) {
@@ -763,20 +771,23 @@ public class ArenaDynArray<T> implements List<T> {
         }
     }
 
-    private void booleanSort() {
+    private void booleanSort(Comparator<Boolean> c) {
+        final boolean leftValue = c.compare(false, true) > 0;
+        final boolean rightValue = !leftValue;
+
         int i = 0;
         int j = size - 1;
         while (i < j) {
-            while (i < j && !nativeValues.getAtIndex((ValueLayout.OfBoolean) layout, i)) {
+            while (i < j && nativeValues.getAtIndex((ValueLayout.OfBoolean) layout, i) == leftValue) {
                 i++;
             }
-            while (i < j && nativeValues.getAtIndex((ValueLayout.OfBoolean) layout, j)) {
+            while (i < j && nativeValues.getAtIndex((ValueLayout.OfBoolean) layout, j) == rightValue) {
                 j--;
             }
 
             if (i < j) {
-                nativeValues.setAtIndex((ValueLayout.OfBoolean) layout, i, false);
-                nativeValues.setAtIndex((ValueLayout.OfBoolean) layout, j, true);
+                nativeValues.setAtIndex((ValueLayout.OfBoolean) layout, i, leftValue);
+                nativeValues.setAtIndex((ValueLayout.OfBoolean) layout, j, rightValue);
                 i++;
                 j--;
             }
