@@ -8,7 +8,7 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
-class ArenaDynArrayTest {
+class ArenaDynArrayIntegerTest {
 
     void createIntArrayWithValues(ArenaDynArray<Integer> array, int... values) {
         for (int v : values) array.add(v);
