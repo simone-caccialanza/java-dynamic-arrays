@@ -388,4 +388,580 @@ class ArenaDynArrayDoubleTest {
         array.add(1.0);
         assertEquals(1, array.size());
     }
+
+    @Test
+    void listIteratorIteratesAllElements() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        array.addAll(List.of(1.0, 2.0, 3.0));
+        ListIterator<Double> it = array.listIterator();
+        assertTrue(it.hasNext());
+        assertEquals(1.0, it.next());
+        assertEquals(2.0, it.next());
+        assertEquals(3.0, it.next());
+        assertFalse(it.hasNext());
+        assertTrue(it.hasPrevious());
+        assertEquals(3.0, it.previous());
+    }
+
+    @Test
+    void subListReturnsCorrectElements() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        array.addAll(List.of(10.0, 20.0, 30.0, 40.0));
+        List<Double> sub = array.subList(1, 3);
+        assertEquals(2, sub.size());
+        assertEquals(20.0, sub.get(0));
+        assertEquals(30.0, sub.get(1));
+    }
+
+    @Test
+    void spliteratorIteratesAllElements() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        array.addAll(List.of(5.0, 6.0, 7.0));
+        List<Double> result = new ArrayList<>();
+        array.spliterator().forEachRemaining(result::add);
+        assertEquals(List.of(5.0, 6.0, 7.0), result);
+    }
+
+    @Test
+    void streamCollectsAllElements() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        array.addAll(List.of(100.0, 200.0, 300.0));
+        List<Double> collected = array.stream().toList();
+        assertEquals(List.of(100.0, 200.0, 300.0), collected);
+    }
+
+    @Test
+    void addThrowsOnNegativeCapacity() {
+        assertThrows(IllegalArgumentException.class, () -> new ArenaDynArray<>(Double.class, -1));
+    }
+
+    @Test
+    void addTriggersReallocationWhenCapacityReached() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class, 2);
+        array.add(1.0);
+        array.add(2.0);
+        array.add(3.0); // should trigger reallocation
+        assertEquals(3, array.size());
+        assertEquals(1.0, array.get(0));
+        assertEquals(2.0, array.get(1));
+        assertEquals(3.0, array.get(2));
+    }
+
+    @Test
+    void addAllAtIndexZeroOnEmptyArray() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        array.addAll(0, List.of(1.0, 2.0, 3.0));
+        assertEquals(3, array.size());
+        assertEquals(1.0, array.getFirst());
+    }
+
+    @Test
+    void addAllAtEndOfArray() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        createArrayWithValues(array, 1.0, 2.0);
+        array.addAll(2, List.of(3.0, 4.0));
+        assertEquals(4, array.size());
+        assertEquals(4.0, array.get(3));
+    }
+
+    @Test
+    void containsAllOnEmptyArray() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        assertFalse(array.containsAll(List.of(1.0, 2.0, 3.0)));
+    }
+
+    @Test
+    void removeAllRemovesAllElements() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        createArrayWithValues(array, 1.0, 2.0, 3.0);
+        array.removeAll(List.of(1.0, 2.0, 3.0));
+        assertEquals(0, array.size());
+        assertTrue(array.isEmpty());
+    }
+
+    @Test
+    void removeIfOnEmptyArray() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        assertFalse(array.removeIf(_ -> true));
+    }
+
+    @Test
+    void indexOfWithNullOnEmptyArray() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        assertEquals(-1, array.indexOf(null));
+    }
+
+    @Test
+    @SuppressWarnings("SuspiciousMethodCalls")
+    void indexOfThrowsOnWrongType() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        assertThrows(ClassCastException.class, () -> array.indexOf("string"));
+    }
+
+    @Test
+    void lastIndexOfWithNullOnEmptyArray() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        assertEquals(-1, array.lastIndexOf(null));
+    }
+
+    @Test
+    void forEachThrowsOnNullAction() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        array.add(1.0);
+        assertThrows(NullPointerException.class, () -> array.forEach(null));
+    }
+
+    @Test
+    void sortThrowsOnNullComparator() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        array.add(1.0);
+        assertThrows(NullPointerException.class, () -> array.sort(null));
+    }
+
+    @Test
+    void toArrayWithNullArgument() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        array.add(1.0);
+        assertThrows(IllegalArgumentException.class, () -> array.toArray((Double[]) null));
+    }
+
+    @Test
+    @SuppressWarnings("SuspiciousToArrayCall")
+    void toArrayWithWrongTypeThrows() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        array.add(1.0);
+        assertThrows(IllegalArgumentException.class, () -> array.toArray(new String[1]));
+    }
+
+    @Test
+    void getFirstOnEmptyArrayThrows() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        assertThrows(IndexOutOfBoundsException.class, array::getFirst);
+    }
+
+    @Test
+    void getLastOnEmptyArrayThrows() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        assertThrows(IndexOutOfBoundsException.class, array::getLast);
+    }
+
+    @Test
+    void removeFirstOnEmptyArrayThrows() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        assertThrows(NoSuchElementException.class, array::removeFirst);
+    }
+
+    @Test
+    void removeLastOnEmptyArrayThrows() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        assertThrows(NoSuchElementException.class, array::removeLast);
+    }
+
+    @Test
+    void listIteratorWithIndex() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        createArrayWithValues(array, 1.0, 2.0, 3.0, 4.0);
+        ListIterator<Double> it = array.listIterator(2);
+        assertEquals(3.0, it.next());
+        assertEquals(4.0, it.next());
+    }
+
+    @Test
+    void listIteratorWithIndexThrowsOnInvalidIndex() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        assertThrows(IndexOutOfBoundsException.class, () -> array.listIterator(-1));
+        assertThrows(IndexOutOfBoundsException.class, () -> array.listIterator(1));
+    }
+
+    @Test
+    void listIteratorNextIndexReturnsCorrectValue() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        createArrayWithValues(array, 1.0, 2.0, 3.0);
+        ListIterator<Double> it = array.listIterator();
+        assertEquals(0, it.nextIndex());
+        it.next();
+        assertEquals(1, it.nextIndex());
+    }
+
+    @Test
+    void listIteratorPreviousIndexReturnsCorrectValue() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        createArrayWithValues(array, 1.0, 2.0, 3.0);
+        ListIterator<Double> it = array.listIterator();
+        assertEquals(-1, it.previousIndex());
+        it.next();
+        assertEquals(0, it.previousIndex());
+    }
+
+    @Test
+    void listIteratorPreviousThrowsWhenAtStart() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        array.add(1.0);
+        ListIterator<Double> it = array.listIterator();
+        assertThrows(NoSuchElementException.class, it::previous);
+    }
+
+    @Test
+    void listIteratorNextThrowsWhenAtEnd() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        array.add(1.0);
+        ListIterator<Double> it = array.listIterator();
+        it.next();
+        assertThrows(NoSuchElementException.class, it::next);
+    }
+
+    @Test
+    void listIteratorRemoveRemovesLastReturnedElement() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        createArrayWithValues(array, 1.0, 2.0, 3.0);
+        ListIterator<Double> it = array.listIterator();
+        it.next();
+        it.remove();
+        assertEquals(2, array.size());
+        assertEquals(2.0, array.getFirst());
+    }
+
+    @Test
+    void listIteratorSetUpdatesLastReturnedElement() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        createArrayWithValues(array, 1.0, 2.0, 3.0);
+        ListIterator<Double> it = array.listIterator();
+        it.next();
+        it.set(99.0);
+        assertEquals(99.0, array.getFirst());
+    }
+
+    @Test
+    void listIteratorSetThrowsWhenNotAdvanced() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        array.add(1.0);
+        ListIterator<Double> it = array.listIterator();
+        assertThrows(IllegalStateException.class, () -> it.set(99.0));
+    }
+
+    @Test
+    void listIteratorAddInsertsElement() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        createArrayWithValues(array, 1.0, 3.0);
+        ListIterator<Double> it = array.listIterator();
+        it.next();
+        it.add(2.0);
+        assertEquals(3, array.size());
+        assertEquals(2.0, array.get(1));
+    }
+
+    @Test
+    void subListThrowsOnNegativeFromIndex() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        createArrayWithValues(array, 1.0, 2.0, 3.0);
+        assertThrows(IndexOutOfBoundsException.class, () -> array.subList(-1, 2));
+    }
+
+    @Test
+    void subListThrowsWhenToIndexExceedsSize() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        createArrayWithValues(array, 1.0, 2.0, 3.0);
+        assertThrows(IndexOutOfBoundsException.class, () -> array.subList(0, 4));
+    }
+
+    @Test
+    void subListThrowsWhenFromIndexGreaterThanToIndex() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        createArrayWithValues(array, 1.0, 2.0, 3.0);
+        assertThrows(IndexOutOfBoundsException.class, () -> array.subList(2, 1));
+    }
+
+    @Test
+    void subListReturnsEmptyListWhenFromEqualsTo() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        createArrayWithValues(array, 1.0, 2.0, 3.0);
+        List<Double> sub = array.subList(1, 1);
+        assertEquals(0, sub.size());
+    }
+
+    @Test
+    void reversedThrowsUnsupportedOperationException() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        assertThrows(UnsupportedOperationException.class, array::reversed);
+    }
+
+    @Test
+    void retainAllThrowsUnsupportedOperationException() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        var list = List.of(1.0, 2.0, 3.0);
+        assertThrows(UnsupportedOperationException.class, () -> array.retainAll(list));
+    }
+
+    @Test
+    void replaceAllThrowsUnsupportedOperationException() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        assertThrows(UnsupportedOperationException.class, () -> array.replaceAll(x -> x * 2));
+    }
+
+    @Test
+    void parallelStreamCollectsAllElements() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        createArrayWithValues(array, 1.0, 2.0, 3.0, 4.0, 5.0);
+        List<Double> collected = array.parallelStream().toList();
+        assertEquals(5, collected.size());
+        assertTrue(collected.containsAll(List.of(1.0, 2.0, 3.0, 4.0, 5.0)));
+    }
+
+    @Test
+    void addManyElementsTriggersMultipleReallocations() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class, 2);
+        for (int i = 0; i < 100; i++) {
+            array.add((double) i);
+        }
+        assertEquals(100, array.size());
+        assertEquals(0.0, array.getFirst());
+        assertEquals(99.0, array.get(99));
+    }
+
+    @Test
+    void clearAndReaddElements() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        createArrayWithValues(array, 1.0, 2.0, 3.0);
+        array.clear();
+        createArrayWithValues(array, 4.0, 5.0, 6.0);
+        assertEquals(3, array.size());
+        assertEquals(4.0, array.getFirst());
+    }
+
+    @Test
+    void multipleRemoveOperationsPreserveOrder() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        createArrayWithValues(array, 1.0, 2.0, 3.0, 4.0, 5.0);
+        array.remove(1);
+        array.remove(2);
+        assertEquals(3, array.size());
+        assertEquals(1.0, array.get(0));
+        assertEquals(3.0, array.get(1));
+        assertEquals(5.0, array.get(2));
+    }
+
+    @Test
+    void iteratorMultipleCallsToNext() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        createArrayWithValues(array, 1.0, 2.0, 3.0);
+        Iterator<Double> it = array.iterator();
+        int count = 0;
+        while (it.hasNext()) {
+            it.next();
+            count++;
+        }
+        assertEquals(3, count);
+        assertThrows(NoSuchElementException.class, it::next);
+    }
+
+    @Test
+    void addAllNullCollectionThrows() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        assertThrows(NullPointerException.class, () -> array.addAll(null));
+    }
+
+    @Test
+    void addAllAtIndexNullCollectionThrows() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        assertThrows(NullPointerException.class, () -> array.addAll(0, null));
+    }
+
+    @Test
+    void addNullElementThrows() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        assertThrows(NullPointerException.class, () -> array.add(null));
+    }
+
+    @Test
+    void setNullElementThrows() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        array.add(1.0);
+        assertThrows(NullPointerException.class, () -> array.set(0, null));
+    }
+
+    @Test
+    void containsNullReturnsFalse() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        createArrayWithValues(array, 1.0, 2.0, 3.0);
+        assertEquals(-1, array.indexOf(null));
+        assertFalse(array.contains(null));
+    }
+
+    @Test
+    void removeAllNullCollectionThrows() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        assertThrows(NullPointerException.class, () -> array.removeAll(null));
+    }
+
+    @Test
+    void containsAllNullCollectionThrows() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        assertThrows(NullPointerException.class, () -> array.containsAll(null));
+    }
+
+    @Test
+    void addAtMaxCapacityBoundary() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class, 1);
+        array.add(1.0);
+        array.add(2.0); // triggers reallocation
+        array.add(3.0);
+        assertEquals(3, array.size());
+        assertEquals(1.0, array.get(0));
+        assertEquals(2.0, array.get(1));
+        assertEquals(3.0, array.get(2));
+    }
+
+    @Test
+    void addAtIndexAtSizeBoundary() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        createArrayWithValues(array, 1.0, 2.0, 3.0);
+        array.add(3, 4.0); // valid: adds at the end
+        assertEquals(4, array.size());
+        assertEquals(4.0, array.get(3));
+    }
+
+    @Test
+    void removeAtIndexMaxBoundary() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        createArrayWithValues(array, 1.0, 2.0, 3.0, 4.0, 5.0);
+        array.remove(4); // last valid index
+        assertEquals(4, array.size());
+        assertEquals(4.0, array.get(3));
+    }
+
+    @Test
+    void getAtMaxIndexBoundary() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        createArrayWithValues(array, 1.0, 2.0, 3.0);
+        assertEquals(3.0, array.get(2)); // last valid index
+        assertThrows(IndexOutOfBoundsException.class, () -> array.get(3));
+    }
+
+    @Test
+    void setAtMaxIndexBoundary() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        createArrayWithValues(array, 1.0, 2.0, 3.0);
+        array.set(2, 99.0); // last valid index
+        assertEquals(99.0, array.get(2));
+        assertThrows(IndexOutOfBoundsException.class, () -> array.set(3, 100.0));
+    }
+
+    @Test
+    void iteratorRemoveWithoutNextThrows() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        createArrayWithValues(array, 1.0, 2.0, 3.0);
+        Iterator<Double> it = array.iterator();
+        assertThrows(IllegalStateException.class, it::remove);
+    }
+
+    @Test
+    void iteratorDoubleRemoveThrows() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        createArrayWithValues(array, 1.0, 2.0, 3.0);
+        Iterator<Double> it = array.iterator();
+        it.next();
+        it.remove();
+        assertThrows(IllegalStateException.class, it::remove);
+    }
+
+    @Test
+    void listIteratorRemoveAfterPreviousWorks() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        createArrayWithValues(array, 1.0, 2.0, 3.0);
+        ListIterator<Double> it = array.listIterator();
+        it.next();
+        it.next();
+        it.previous();
+        it.remove();
+        assertEquals(2, array.size());
+    }
+
+    @Test
+    void listIteratorAddAfterRemoveWorks() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        createArrayWithValues(array, 1.0, 2.0, 3.0);
+        ListIterator<Double> it = array.listIterator();
+        it.next();
+        it.remove();
+        it.add(99.0);
+        assertEquals(3, array.size());
+    }
+
+    @Test
+    void addAtIndexZeroShiftsAllElements() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        createArrayWithValues(array, 1.0, 2.0, 3.0);
+        array.add(0, 0.0);
+        assertEquals(4, array.size());
+        assertEquals(0.0, array.get(0));
+        assertEquals(1.0, array.get(1));
+        assertEquals(2.0, array.get(2));
+        assertEquals(3.0, array.get(3));
+    }
+
+    @Test
+    void removeMiddleElementShiftsCorrectly() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        createArrayWithValues(array, 1.0, 2.0, 3.0, 4.0, 5.0);
+        array.remove(2);
+        assertEquals(4, array.size());
+        assertEquals(1.0, array.get(0));
+        assertEquals(2.0, array.get(1));
+        assertEquals(4.0, array.get(2));
+        assertEquals(5.0, array.get(3));
+    }
+
+    @Test
+    void multipleAddAllsWorkCorrectly() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class, 2);
+        array.addAll(List.of(1.0, 2.0));
+        array.addAll(List.of(3.0, 4.0));
+        array.addAll(List.of(5.0, 6.0));
+        assertEquals(6, array.size());
+        assertEquals(1.0, array.get(0));
+        assertEquals(6.0, array.get(5));
+    }
+
+    @Test
+    void streamOnEmptyArrayReturnsEmptyStream() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        assertEquals(0, (long) array.size());
+    }
+
+    @Test
+    void parallelStreamOnEmptyArrayReturnsEmptyStream() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        assertEquals(0, array.parallelStream().count());
+    }
+
+    @Test
+    void spliteratorOnEmptyArrayHasNoElements() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        List<Double> result = new ArrayList<>();
+        array.spliterator().forEachRemaining(result::add);
+        assertEquals(0, result.size());
+    }
+
+    @Test
+    @SuppressWarnings("EqualsWithItself")
+    void equalsOnSelfReturnsTrue() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        createArrayWithValues(array, 1.0, 2.0, 3.0);
+        assertEquals(array, array);
+    }
+
+    @Test
+    void equalsOnDifferentTypeReturnsFalse() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        assertNotEquals('c', array);
+    }
+
+    @Test
+    void hashCodeConsistency() {
+        ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
+        createArrayWithValues(array, 1.0, 2.0, 3.0);
+        int hash1 = array.hashCode();
+        int hash2 = array.hashCode();
+        assertEquals(hash1, hash2);
+    }
 }
