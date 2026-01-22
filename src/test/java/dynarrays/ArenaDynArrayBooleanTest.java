@@ -1,6 +1,5 @@
 package dynarrays;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.*;
@@ -90,7 +89,7 @@ class ArenaDynArrayBooleanTest {
     @SuppressWarnings("SuspiciousMethodCalls")
     void containsThrowsOnWrongType() {
         ArenaDynArray<Boolean> array = new ArenaDynArray<>(Boolean.class);
-        assertThrows(IllegalArgumentException.class, () -> array.contains("string"));
+        assertThrows(ClassCastException.class, () -> array.contains("string"));
     }
 
     @Test
@@ -158,7 +157,7 @@ class ArenaDynArrayBooleanTest {
     @SuppressWarnings("SuspiciousMethodCalls")
     void removeByValueThrowsOnWrongType() {
         ArenaDynArray<Boolean> array = new ArenaDynArray<>(Boolean.class);
-        assertThrows(IllegalArgumentException.class, () -> array.remove("string"));
+        assertThrows(ClassCastException.class, () -> array.remove("string"));
     }
 
     @Test
@@ -175,7 +174,7 @@ class ArenaDynArrayBooleanTest {
     @SuppressWarnings("SequencedCollectionMethodCanBeUsed")
     void removeAtIndexThrowsOnInvalidIndex() {
         ArenaDynArray<Boolean> array = new ArenaDynArray<>(Boolean.class);
-        assertThrows(IndexOutOfBoundsException.class, () -> array.remove(0));
+        assertThrows(NoSuchElementException.class, () -> array.remove(0));
     }
 
     @Test

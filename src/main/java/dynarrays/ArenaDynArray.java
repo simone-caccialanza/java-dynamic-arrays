@@ -16,6 +16,7 @@ public class ArenaDynArray<T> implements List<T> {
     //TODO implement void
     //TODO check parent class documentation and throw the requested exceptions
     //TODO can I implement sort()?
+    //TODO implement remaining UnsupportedOperations
 
     private static final short DEFAULT_START_CAPACITY = 8;
 
@@ -130,9 +131,6 @@ public class ArenaDynArray<T> implements List<T> {
         if (o == null) {
             return indexOf(null) != -1;
         }
-        if (!(this.clazz.isAssignableFrom(o.getClass()))) {
-            throw new IllegalArgumentException("Parameter of contains(Object) is not of type " + this.clazz);
-        }
         T t = clazz.cast(o);
         for (int i = 0; i < size; i++) {
             if (t.equals(get(i))) {
@@ -242,9 +240,7 @@ public class ArenaDynArray<T> implements List<T> {
 
     @Override
     public boolean remove(Object o) {
-        if (!(this.clazz.isAssignableFrom(o.getClass()))) {
-            throw new IllegalArgumentException("Parameter of contains(Object) is not of type " + this.clazz);
-        }
+        Objects.requireNonNull(o);
         T t = clazz.cast(o);
         for (int i = 0; i < size; i++) {
             if (t.equals(get(i))) {
@@ -258,6 +254,7 @@ public class ArenaDynArray<T> implements List<T> {
 
     @Override
     public boolean containsAll(Collection<?> c) {
+        Objects.requireNonNull(c);
         for (Object o : c) {
             if (!contains(o)) {
                 return false;
@@ -268,6 +265,7 @@ public class ArenaDynArray<T> implements List<T> {
 
     @Override
     public boolean addAll(Collection<? extends T> c) {
+        Objects.requireNonNull(c);
         for (T t : c) {
             add(t);
         }
@@ -276,6 +274,8 @@ public class ArenaDynArray<T> implements List<T> {
 
     @Override
     public boolean addAll(int index, Collection<? extends T> c) {
+        Objects.requireNonNull(c);
+        checkIndexOutOfBoundsForAdd(index);
         boolean modified = false;
         int insertIndex = index;
         for (T t : c) {
@@ -326,11 +326,13 @@ public class ArenaDynArray<T> implements List<T> {
 
     @Override
     public boolean retainAll(Collection<?> c) {
+        //TODO implement this
         throw new UnsupportedOperationException("ArenaDynArray.retainAll(Collection<?>) is not implemented yet");
     }
 
     @Override
     public void replaceAll(UnaryOperator<T> operator) {
+        //TODO implement this
         throw new UnsupportedOperationException("ArenaDynArray.replaceAll(UnaryOperator<T>) is not implemented yet");
     }
 
@@ -357,6 +359,9 @@ public class ArenaDynArray<T> implements List<T> {
     @Override
     public T get(int index) {
         checkIndexOutOfBounds(index);
+        if(this.isEmpty()){
+            throw new NoSuchElementException("ArenaDynArray is empty");
+        }
         return reader.apply(index);
     }
 
@@ -380,6 +385,9 @@ public class ArenaDynArray<T> implements List<T> {
 
     @Override
     public T remove(int index) {
+        if(this.isEmpty()){
+            throw new NoSuchElementException("ArenaDynArray is empty");
+        }
         checkIndexOutOfBounds(index);
         T oldValue = clazz.cast(get(index));
         shiftLeftValuesAtIndex(index);
@@ -435,7 +443,7 @@ public class ArenaDynArray<T> implements List<T> {
 
     @Override
     public ListIterator<T> listIterator() {
-        return new ListIterator<>() {
+        return new ListIterator<>() { //TODO extract this anonymous class
             private int cursor = 0;
             private int lastCursor = 0;
 
@@ -581,6 +589,8 @@ public class ArenaDynArray<T> implements List<T> {
 
     @Override
     public Spliterator<T> spliterator() {
+        //TODO test if methods returning Objects don't load the heap based on the content
+        //TODO try to add some kind of warning if the heap space is used
         return List.super.spliterator();
     }
 

@@ -90,7 +90,7 @@ class ArenaDynArrayIntegerTest {
     @SuppressWarnings("SuspiciousMethodCalls")
     void containsThrowsOnWrongType() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
-        assertThrows(IllegalArgumentException.class, () -> array.contains("string"));
+        assertThrows(ClassCastException.class, () -> array.contains("string"));
     }
 
     @Test
@@ -158,7 +158,7 @@ class ArenaDynArrayIntegerTest {
     @SuppressWarnings("SuspiciousMethodCalls")
     void removeByValueThrowsOnWrongType() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
-        assertThrows(IllegalArgumentException.class, () -> array.remove("string"));
+        assertThrows(ClassCastException.class, () -> array.remove("string"));
     }
 
     @Test
@@ -175,7 +175,7 @@ class ArenaDynArrayIntegerTest {
     @SuppressWarnings("SequencedCollectionMethodCanBeUsed")
     void removeAtIndexThrowsOnInvalidIndex() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
-        assertThrows(IndexOutOfBoundsException.class, () -> array.remove(0));
+        assertThrows(NoSuchElementException.class, () -> array.remove(0));
     }
 
     @Test
@@ -581,13 +581,13 @@ class ArenaDynArrayIntegerTest {
     @Test
     void removeFirstOnEmptyArrayThrows() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
-        assertThrows(IndexOutOfBoundsException.class, array::removeFirst);
+        assertThrows(NoSuchElementException.class, array::removeFirst);
     }
 
     @Test
     void removeLastOnEmptyArrayThrows() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
-        assertThrows(IndexOutOfBoundsException.class, array::removeLast);
+        assertThrows(NoSuchElementException.class, array::removeLast);
     }
 
     @Test

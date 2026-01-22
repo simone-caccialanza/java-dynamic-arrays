@@ -1,6 +1,5 @@
 package dynarrays;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.*;
@@ -90,7 +89,7 @@ class ArenaDynArrayLongTest {
     @SuppressWarnings("SuspiciousMethodCalls")
     void containsThrowsOnWrongType() {
         ArenaDynArray<Long> array = new ArenaDynArray<>(Long.class);
-        assertThrows(IllegalArgumentException.class, () -> array.contains("string"));
+        assertThrows(ClassCastException.class, () -> array.contains("string"));
     }
 
     @Test
@@ -142,7 +141,7 @@ class ArenaDynArrayLongTest {
     void removeByValueRemovesFirstOccurrence() {
         ArenaDynArray<Long> array = new ArenaDynArray<>(Long.class);
         createArrayWithValues(array, 1L, 2L, 1L);
-        assertTrue(array.remove(Long.valueOf(1L)));
+        assertTrue(array.remove(1L));
         assertEquals(2, array.size());
         assertEquals(2L, array.getFirst());
     }
@@ -151,14 +150,14 @@ class ArenaDynArrayLongTest {
     void removeByValueReturnsFalseIfAbsent() {
         ArenaDynArray<Long> array = new ArenaDynArray<>(Long.class);
         array.add(1L);
-        assertFalse(array.remove(Long.valueOf(2L)));
+        assertFalse(array.remove(2L));
     }
 
     @Test
     @SuppressWarnings("SuspiciousMethodCalls")
     void removeByValueThrowsOnWrongType() {
         ArenaDynArray<Long> array = new ArenaDynArray<>(Long.class);
-        assertThrows(IllegalArgumentException.class, () -> array.remove("string"));
+        assertThrows(ClassCastException.class, () -> array.remove("string"));
     }
 
     @Test
@@ -175,7 +174,7 @@ class ArenaDynArrayLongTest {
     @SuppressWarnings("SequencedCollectionMethodCanBeUsed")
     void removeAtIndexThrowsOnInvalidIndex() {
         ArenaDynArray<Long> array = new ArenaDynArray<>(Long.class);
-        assertThrows(IndexOutOfBoundsException.class, () -> array.remove(0));
+        assertThrows(NoSuchElementException.class, () -> array.remove(0));
     }
 
     @Test
