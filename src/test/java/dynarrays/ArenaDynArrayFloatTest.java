@@ -141,7 +141,7 @@ class ArenaDynArrayFloatTest {
     void removeByValueRemovesFirstOccurrence() {
         ArenaDynArray<Float> array = new ArenaDynArray<>(Float.class);
         createArrayWithValues(array, 1.0f, 2.0f, 1.0f);
-        assertTrue(array.remove(Float.valueOf(1.0f)));
+        assertTrue(array.remove(1.0f));
         assertEquals(2, array.size());
         assertEquals(2.0f, array.getFirst());
     }
@@ -150,7 +150,7 @@ class ArenaDynArrayFloatTest {
     void removeByValueReturnsFalseIfAbsent() {
         ArenaDynArray<Float> array = new ArenaDynArray<>(Float.class);
         array.add(1.0f);
-        assertFalse(array.remove(Float.valueOf(2.0f)));
+        assertFalse(array.remove(2.0f));
     }
 
     @Test

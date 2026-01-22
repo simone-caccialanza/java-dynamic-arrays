@@ -141,7 +141,7 @@ class ArenaDynArrayBooleanTest {
     void removeByValueRemovesFirstOccurrence() {
         ArenaDynArray<Boolean> array = new ArenaDynArray<>(Boolean.class);
         createArrayWithValues(array, true, false, true);
-        assertTrue(array.remove(Boolean.valueOf(true)));
+        assertTrue(array.remove(Boolean.TRUE));
         assertEquals(2, array.size());
         assertEquals(false, array.getFirst());
     }
@@ -150,7 +150,7 @@ class ArenaDynArrayBooleanTest {
     void removeByValueReturnsFalseIfAbsent() {
         ArenaDynArray<Boolean> array = new ArenaDynArray<>(Boolean.class);
         array.add(true);
-        assertFalse(array.remove(Boolean.valueOf(false)));
+        assertFalse(array.remove(Boolean.FALSE));
     }
 
     @Test

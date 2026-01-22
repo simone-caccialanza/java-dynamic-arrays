@@ -898,14 +898,12 @@ class ArenaDynArrayIntegerTest {
     // ==================== ADDITIONAL CORNER CASES ====================
 
     @Test
-    @SuppressWarnings("DataFlowIssue")
     void addAllNullCollectionThrows() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
         assertThrows(NullPointerException.class, () -> array.addAll(null));
     }
 
     @Test
-    @SuppressWarnings("DataFlowIssue")
     void addAllAtIndexNullCollectionThrows() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
         assertThrows(NullPointerException.class, () -> array.addAll(0, null));
@@ -939,7 +937,6 @@ class ArenaDynArrayIntegerTest {
     }
 
     @Test
-    @SuppressWarnings("DataFlowIssue")
     void containsAllNullCollectionThrows() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
         assertThrows(NullPointerException.class, () -> array.containsAll(null));

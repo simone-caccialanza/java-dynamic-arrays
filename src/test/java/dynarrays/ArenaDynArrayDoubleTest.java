@@ -141,7 +141,7 @@ class ArenaDynArrayDoubleTest {
     void removeByValueRemovesFirstOccurrence() {
         ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
         createArrayWithValues(array, 1.0, 2.0, 1.0);
-        assertTrue(array.remove(Double.valueOf(1.0)));
+        assertTrue(array.remove(1.0));
         assertEquals(2, array.size());
         assertEquals(2.0, array.getFirst());
     }
@@ -150,7 +150,7 @@ class ArenaDynArrayDoubleTest {
     void removeByValueReturnsFalseIfAbsent() {
         ArenaDynArray<Double> array = new ArenaDynArray<>(Double.class);
         array.add(1.0);
-        assertFalse(array.remove(Double.valueOf(2.0)));
+        assertFalse(array.remove(2.0));
     }
 
     @Test
