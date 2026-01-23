@@ -241,7 +241,6 @@ public class ArenaDynArray<T> implements List<T> {
 
     @Override
     public boolean add(T element) {
-        //TODO check size overflow
         size++;
         checkSizeAndRealloc();
         set(size - 1, element);
@@ -453,132 +452,13 @@ public class ArenaDynArray<T> implements List<T> {
 
     @Override
     public ListIterator<T> listIterator() {
-        return new ListIterator<>() { //TODO extract this anonymous class
-            private int cursor = 0;
-            private int lastCursor = 0;
-
-            @Override
-            public boolean hasNext() {
-                return cursor != size;
-            }
-
-            @Override
-            public T next() {
-                if (cursor >= size) {
-                    throw new NoSuchElementException();
-                }
-                lastCursor = cursor;
-                return get(cursor++);
-            }
-
-            @Override
-            public boolean hasPrevious() {
-                return cursor > 0;
-            }
-
-            @Override
-            public T previous() {
-                if (cursor <= 0) {
-                    throw new NoSuchElementException();
-                }
-                lastCursor = cursor;
-                return get(--cursor);
-            }
-
-            @Override
-            public int nextIndex() {
-                return cursor;
-            }
-
-            @Override
-            public int previousIndex() {
-                return cursor - 1;
-            }
-
-            @Override
-            public void remove() {
-                ArenaDynArray.this.remove(lastCursor);
-            }
-
-            @Override
-            public void set(T t) {
-                if (cursor <= 0) {
-                    throw new IllegalStateException();
-                }
-                ArenaDynArray.this.set(lastCursor, t);
-            }
-
-            @Override
-            public void add(T t) {
-                ArenaDynArray.this.add(cursor++, t);
-            }
-        };
+        return new ArenaListIterator(0);
     }
 
     @Override
     public ListIterator<T> listIterator(int index) {
         checkIndexOutOfBounds(index);
-
-        return new ListIterator<>() {
-            private int cursor = index;
-            private int lastCursor = index;
-
-            @Override
-            public boolean hasNext() {
-                return cursor != size;
-            }
-
-            @Override
-            public T next() {
-                if (cursor >= size) {
-                    throw new NoSuchElementException();
-                }
-                lastCursor = cursor;
-                return get(cursor++);
-            }
-
-            @Override
-            public boolean hasPrevious() {
-                return cursor > 0;
-            }
-
-            @Override
-            public T previous() {
-                if (cursor <= 0) {
-                    throw new NoSuchElementException();
-                }
-                lastCursor = cursor;
-                return get(--cursor);
-            }
-
-            @Override
-            public int nextIndex() {
-                return cursor;
-            }
-
-            @Override
-            public int previousIndex() {
-                return cursor - 1;
-            }
-
-            @Override
-            public void remove() {
-                ArenaDynArray.this.remove(lastCursor);
-            }
-
-            @Override
-            public void set(T t) {
-                if (cursor <= 0) {
-                    throw new IllegalStateException();
-                }
-                ArenaDynArray.this.set(lastCursor, t);
-            }
-
-            @Override
-            public void add(T t) {
-                ArenaDynArray.this.add(cursor++, t);
-            }
-        };
+        return new ArenaListIterator(index);
     }
 
     @Override
@@ -847,6 +727,73 @@ public class ArenaDynArray<T> implements List<T> {
             ArenaDynArray.this.remove(lastReturned);
             index = lastReturned;
             lastReturned = -1;
+        }
+    }
+
+    protected class ArenaListIterator implements ListIterator<T> {
+
+        private int cursor;
+        private int lastCursor;
+
+        public ArenaListIterator(int index) {
+            this.cursor = index;
+            this.lastCursor = index;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return cursor != size;
+        }
+
+        @Override
+        public T next() {
+            if (cursor >= size) {
+                throw new NoSuchElementException();
+            }
+            lastCursor = cursor;
+            return get(cursor++);
+        }
+
+        @Override
+        public boolean hasPrevious() {
+            return cursor > 0;
+        }
+
+        @Override
+        public T previous() {
+            if (cursor <= 0) {
+                throw new NoSuchElementException();
+            }
+            lastCursor = cursor;
+            return get(--cursor);
+        }
+
+        @Override
+        public int nextIndex() {
+            return cursor;
+        }
+
+        @Override
+        public int previousIndex() {
+            return cursor - 1;
+        }
+
+        @Override
+        public void remove() {
+            ArenaDynArray.this.remove(lastCursor);
+        }
+
+        @Override
+        public void set(T t) {
+            if (cursor <= 0) {
+                throw new IllegalStateException();
+            }
+            ArenaDynArray.this.set(lastCursor, t);
+        }
+
+        @Override
+        public void add(T t) {
+            ArenaDynArray.this.add(cursor++, t);
         }
     }
 
