@@ -713,22 +713,38 @@ class ArenaDynArrayIntegerTest {
     }
 
     @Test
-    void reversedThrowsUnsupportedOperationException() {
+    void reversedReturnsReversedList() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
-        assertThrows(UnsupportedOperationException.class, array::reversed);
+        createIntArrayWithValues(array, 1, 2, 3, 4, 5);
+        List<Integer> reversed = array.reversed();
+        assertEquals(5, reversed.size());
+        assertEquals(5, reversed.get(0));
+        assertEquals(4, reversed.get(1));
+        assertEquals(3, reversed.get(2));
+        assertEquals(2, reversed.get(3));
+        assertEquals(1, reversed.get(4));
     }
 
     @Test
-    void retainAllThrowsUnsupportedOperationException() {
+    void retainAllKeepsOnlySpecifiedElements() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
-        var list = List.of(1, 2, 3);
-        assertThrows(UnsupportedOperationException.class, () -> array.retainAll(list));
+        createIntArrayWithValues(array, 1, 2, 3, 4, 5);
+        boolean modified = array.retainAll(List.of(2, 4));
+        assertTrue(modified);
+        assertEquals(2, array.size());
+        assertEquals(2, array.get(0));
+        assertEquals(4, array.get(1));
     }
 
     @Test
-    void replaceAllThrowsUnsupportedOperationException() {
+    void replaceAllReplacesAllElements() {
         ArenaDynArray<Integer> array = new ArenaDynArray<>(Integer.class);
-        assertThrows(UnsupportedOperationException.class, () -> array.replaceAll(x -> x * 2));
+        createIntArrayWithValues(array, 1, 2, 3);
+        array.replaceAll(x -> x * 2);
+        assertEquals(3, array.size());
+        assertEquals(2, array.get(0));
+        assertEquals(4, array.get(1));
+        assertEquals(6, array.get(2));
     }
 
     @Test

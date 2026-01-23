@@ -680,22 +680,38 @@ class ArenaDynArrayCharacterTest {
     }
 
     @Test
-    void reversedThrowsUnsupportedOperationException() {
+    void reversedReturnsReversedList() {
         ArenaDynArray<Character> array = new ArenaDynArray<>(Character.class);
-        assertThrows(UnsupportedOperationException.class, array::reversed);
+        createArrayWithValues(array, 'a', 'b', 'c', 'd', 'e');
+        List<Character> reversed = array.reversed();
+        assertEquals(5, reversed.size());
+        assertEquals('e', reversed.get(0));
+        assertEquals('d', reversed.get(1));
+        assertEquals('c', reversed.get(2));
+        assertEquals('b', reversed.get(3));
+        assertEquals('a', reversed.get(4));
     }
 
     @Test
-    void retainAllThrowsUnsupportedOperationException() {
+    void retainAllKeepsOnlySpecifiedElements() {
         ArenaDynArray<Character> array = new ArenaDynArray<>(Character.class);
-        var list = List.of('a', 'b', 'c');
-        assertThrows(UnsupportedOperationException.class, () -> array.retainAll(list));
+        createArrayWithValues(array, 'a', 'b', 'c', 'd', 'e');
+        boolean modified = array.retainAll(List.of('b', 'd'));
+        assertTrue(modified);
+        assertEquals(2, array.size());
+        assertEquals('b', array.get(0));
+        assertEquals('d', array.get(1));
     }
 
     @Test
-    void replaceAllThrowsUnsupportedOperationException() {
+    void replaceAllReplacesAllElements() {
         ArenaDynArray<Character> array = new ArenaDynArray<>(Character.class);
-        assertThrows(UnsupportedOperationException.class, () -> array.replaceAll(x -> (char) (x + 1)));
+        createArrayWithValues(array, 'a', 'b', 'c');
+        array.replaceAll(x -> (char) (x + 1));
+        assertEquals(3, array.size());
+        assertEquals('b', array.get(0));
+        assertEquals('c', array.get(1));
+        assertEquals('d', array.get(2));
     }
 
     @Test

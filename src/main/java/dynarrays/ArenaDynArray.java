@@ -114,7 +114,7 @@ public class ArenaDynArray<T> implements List<T> {
             case SHARED -> Arena.ofShared();
         };
 
-        if (arena == null) {
+        if (initArena == null) {
             throw new IllegalStateException("Could not allocate Arena");
         }
 
@@ -335,14 +335,28 @@ public class ArenaDynArray<T> implements List<T> {
 
     @Override
     public boolean retainAll(Collection<?> c) {
-        //TODO implement this
-        throw new UnsupportedOperationException("ArenaDynArray.retainAll(Collection<?>) is not implemented yet");
+        Objects.requireNonNull(c);
+        boolean modified = false;
+        int i = 0;
+        while (i < size) {
+            if (!c.contains(get(i))) {
+                shiftLeftValuesAtIndex(i);
+                set(size - 1, zero);
+                size--;
+                modified = true;
+            } else {
+                i++;
+            }
+        }
+        return modified;
     }
 
     @Override
     public void replaceAll(UnaryOperator<T> operator) {
-        //TODO implement this
-        throw new UnsupportedOperationException("ArenaDynArray.replaceAll(UnaryOperator<T>) is not implemented yet");
+        Objects.requireNonNull(operator);
+        for (int i = 0; i < size; i++) {
+            set(i, operator.apply(get(i)));
+        }
     }
 
     @Override
@@ -479,8 +493,6 @@ public class ArenaDynArray<T> implements List<T> {
 
     @Override
     public Spliterator<T> spliterator() {
-        //TODO test if methods returning Objects don't load the heap based on the content
-        //TODO try to add some kind of warning if the heap space is used
         return List.super.spliterator();
     }
 
@@ -516,7 +528,11 @@ public class ArenaDynArray<T> implements List<T> {
 
     @Override
     public List<T> reversed() {
-        throw new UnsupportedOperationException("ArenaDynArray.reversed(Collection<?>) is not implemented yet");
+        ArenaDynArray<T> reversedList = new ArenaDynArray<>(clazz, size);
+        for (int i = size - 1; i >= 0; i--) {
+            reversedList.add(get(i));
+        }
+        return reversedList;
     }
 
     @Override
