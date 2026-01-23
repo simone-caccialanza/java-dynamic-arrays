@@ -14,7 +14,6 @@ public class ArenaDynArray<T> implements List<T> {
 
     //TODO implement string
     //TODO implement void
-    //TODO check parent class documentation and throw the requested exceptions
     //TODO can I implement sort()?
     //TODO implement remaining UnsupportedOperations
 
@@ -86,34 +85,45 @@ public class ArenaDynArray<T> implements List<T> {
     }
 
     public ArenaDynArray(Class<T> clazz, long startCapacity, MemoryManagerType memoryManager) {
-        //TODO refactor constructor to be more clear and less complex
         this.clazz = clazz;
-        this.layout = TypeConstant.getBy(clazz).layout;
-        this.zero = TypeConstant.getBy(clazz).zero();
 
-        if (startCapacity < 0) {
-            throw new IllegalArgumentException("Start length must be non negative");
-        }
-        this.capacity = startCapacity;
+        TypeConstant typeConstant = TypeConstant.getBy(clazz);
+        this.layout = typeConstant.layout;
+        this.zero = typeConstant.zero();
 
-        switch (memoryManager) {
-            case GLOBAL -> arena = Arena.global();
-            case CONFINED -> arena = Arena.ofConfined();
-            case SHARED -> arena = Arena.ofShared();
-            default -> throw new IllegalArgumentException("Unsupported memory manager type " + memoryManager);
-        }
-        if (arena == null) {
-            throw new IllegalStateException("Could not allocate Arena");
-        }
-
-        MemoryLayout memoryLayout =
-                MemoryLayout.sequenceLayout(startCapacity, layout);
+        this.capacity = validateAndGetCapacity(startCapacity);
+        this.arena = initializeArena(memoryManager);
 
         this.reader = getValueReader();
         this.setter = getValueSetter();
 
+        this.nativeValues = allocateMemory(startCapacity);
+    }
 
-        this.nativeValues = arena.allocate(memoryLayout.byteSize(), memoryLayout.byteAlignment());
+    private long validateAndGetCapacity(long startCapacity) {
+        if (startCapacity < 0) {
+            throw new IllegalArgumentException("Start length must be non negative");
+        }
+        return startCapacity;
+    }
+
+    private Arena initializeArena(MemoryManagerType memoryManager) {
+        Arena initArena = switch (memoryManager) {
+            case GLOBAL -> Arena.global();
+            case CONFINED -> Arena.ofConfined();
+            case SHARED -> Arena.ofShared();
+        };
+
+        if (arena == null) {
+            throw new IllegalStateException("Could not allocate Arena");
+        }
+
+        return initArena;
+    }
+
+    private MemorySegment allocateMemory(long capacity) {
+        MemoryLayout memoryLayout = MemoryLayout.sequenceLayout(capacity, layout);
+        return arena.allocate(memoryLayout.byteSize(), memoryLayout.byteAlignment());
     }
 
     @Override
